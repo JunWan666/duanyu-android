@@ -1,0 +1,708 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DuanYu UI Concepts</title>
+    <style>
+      :root {
+        --ink: #16201c;
+        --muted: #61706a;
+        --line: #d8e2dd;
+        --paper: #f7faf7;
+        --panel: #ffffff;
+        --mint: #d7f3e4;
+        --green: #198754;
+        --green-2: #0f6f4a;
+        --blue: #2f6bdc;
+        --blue-soft: #e4ecff;
+        --amber: #ad7a16;
+        --amber-soft: #fff1cf;
+        --rose: #b84e67;
+        --rose-soft: #ffe6ed;
+        --shadow: 0 24px 80px rgba(25, 54, 42, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #eef4f0;
+        color: var(--ink);
+        font-family:
+          Inter, "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(5, 390px);
+        gap: 32px;
+        padding: 36px;
+        width: max-content;
+      }
+
+      body.single {
+        background: transparent;
+      }
+
+      body.single .board {
+        grid-template-columns: 390px;
+        gap: 0;
+        padding: 0;
+      }
+
+      .phone {
+        width: 390px;
+        height: 844px;
+        overflow: hidden;
+        border: 10px solid #101816;
+        border-radius: 38px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        position: relative;
+      }
+
+      .screen {
+        height: 100%;
+        padding: 24px 20px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .main-area {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 42px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 22px;
+      }
+
+      .mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1f9b67, #2f6bdc);
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 900;
+      }
+
+      .icon-btn,
+      .tab {
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+      }
+
+      .icon-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        font-size: 18px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--panel);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pill.green {
+        color: var(--green-2);
+        background: var(--mint);
+      }
+
+      .pill.blue {
+        color: var(--blue);
+        background: var(--blue-soft);
+      }
+
+      .pill.amber {
+        color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .chat {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+      }
+
+      .bubble {
+        max-width: 86%;
+        padding: 13px 14px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.48;
+        border: 1px solid transparent;
+      }
+
+      .assistant {
+        align-self: flex-start;
+        background: var(--panel);
+        border-color: var(--line);
+      }
+
+      .user {
+        align-self: flex-end;
+        color: white;
+        background: #1f7a55;
+      }
+
+      .tool-card,
+      .panel,
+      .skill,
+      .setting {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 18px;
+      }
+
+      .tool-card {
+        padding: 13px;
+      }
+
+      .tool-title {
+        font-weight: 800;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .tool-body {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.42;
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr 44px;
+        gap: 10px;
+        padding-top: 2px;
+      }
+
+      .input {
+        min-height: 44px;
+        border-radius: 16px;
+        background: white;
+        border: 1px solid var(--line);
+        padding: 12px 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .send {
+        border: 0;
+        border-radius: 16px;
+        color: white;
+        background: #1f7a55;
+        font-size: 20px;
+      }
+
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        padding: 8px;
+        border-radius: 22px;
+        background: white;
+        border: 1px solid var(--line);
+        margin-top: auto;
+        flex: 0 0 auto;
+      }
+
+      .tab {
+        height: 52px;
+        border-radius: 14px;
+        gap: 3px;
+        font-size: 11px;
+        font-weight: 750;
+        line-height: 1;
+        color: var(--muted);
+      }
+
+      .tab.active {
+        background: var(--mint);
+        border-color: #aadfbe;
+        color: var(--green-2);
+      }
+
+      .tab .tab-icon {
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .tab .tab-label {
+        font-size: 10px;
+      }
+
+      .section-title {
+        font-size: 20px;
+        font-weight: 850;
+      }
+
+      .preview {
+        height: 300px;
+        border-radius: 24px;
+        overflow: hidden;
+        position: relative;
+        background:
+          radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.9) 0 10%, transparent 12%),
+          linear-gradient(135deg, #dff6ff, #d9f0df 45%, #f8e7be);
+        border: 1px solid var(--line);
+      }
+
+      .preview::before {
+        content: "";
+        position: absolute;
+        left: 44px;
+        right: 44px;
+        bottom: 38px;
+        height: 128px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+      }
+
+      .scan-box {
+        position: absolute;
+        left: 60px;
+        top: 72px;
+        width: 210px;
+        height: 150px;
+        border: 3px solid rgba(31, 122, 85, 0.86);
+        border-radius: 22px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .action {
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: white;
+        font-weight: 750;
+        font-size: 13px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .wave {
+        height: 126px;
+        display: grid;
+        grid-template-columns: repeat(24, 1fr);
+        align-items: center;
+        gap: 4px;
+        padding: 10px 0;
+      }
+
+      .bar {
+        width: 100%;
+        border-radius: 999px;
+        background: #1f7a55;
+      }
+
+      .record {
+        height: 74px;
+        width: 74px;
+        border-radius: 50%;
+        border: 10px solid #ffe5eb;
+        background: #d8385e;
+        margin: 10px auto 2px;
+      }
+
+      .skill-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .skill {
+        padding: 14px;
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .skill-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+        background: var(--blue-soft);
+      }
+
+      .switch {
+        width: 44px;
+        height: 26px;
+        border-radius: 999px;
+        background: #1f7a55;
+        position: relative;
+      }
+
+      .switch::after {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        right: 3px;
+        top: 3px;
+      }
+
+      .api-header {
+        padding: 16px;
+        border-radius: 22px;
+        color: white;
+        background: linear-gradient(135deg, #173f33, #2350a8);
+      }
+
+      .api-url {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.12);
+        font-family: Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .setting {
+        padding: 13px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .setting strong,
+      .skill strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .setting span,
+      .skill span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 3px;
+      }
+
+      .mono {
+        font-family: Consolas, monospace;
+      }
+
+      .caption {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: -6px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <section class="phone" id="chat">
+        <div class="screen">
+          <div class="top">
+            <div class="brand"><div class="mark">绔?/div>绔</div>
+            <button class="icon-btn">鈿?/button>
+          </div>
+          <div class="status-row">
+            <div>
+              <strong>Gemma Local E4B</strong>
+              <div class="subtitle">鏈湴鎺ㄧ悊 路 涓枃浼樺厛 路 宸插惎鐢ㄥ伐鍏?/div>
+            </div>
+            <span class="pill green">鍦ㄧ嚎</span>
+          </div>
+          <div class="main-area">
+            <div class="chat">
+              <div class="bubble assistant">
+                浣犲ソ锛屾垜鏄璇€傚彲浠ョ绾胯亰澶╋紝涔熻兘鎸夐渶璋冪敤浣犲紑鍚殑鎶€鑳姐€?              </div>
+              <div class="bubble user">甯垜鎬荤粨杩欐浼氳璁板綍锛屽苟鍒楀嚭寰呭姙銆?/div>
+              <div class="bubble assistant">
+                鍙互銆傛垜浼氭寜鈥滅粨璁恒€侀闄┿€佽礋璐ｄ汉銆佹埅姝㈡椂闂粹€濇暣鐞嗭紝骞朵紭鍏堣緭鍑轰腑鏂囩増鏈€?              </div>
+              <div class="tool-card">
+                <div class="tool-title">鎶€鑳藉缓璁?路 鏃ョ▼鎻愰啋</div>
+                <div class="tool-body">妫€娴嬪埌 3 涓緟鍔炰簨椤癸紝鍙垱寤烘湰鍦伴€氱煡鎻愰啋銆傛墽琛屽墠浼氳姹傜‘璁ゃ€?/div>
+              </div>
+            </div>
+            <div class="composer">
+              <div class="input">杈撳叆娑堟伅锛屾垨绮樿创鍥剧墖 / 闊抽...</div>
+              <button class="send">鈫?/button>
+            </div>
+          </div>
+          <nav class="nav">
+            <div class="tab active"><span class="tab-icon">馃挰</span><span class="tab-label">瀵硅瘽</span></div>
+            <div class="tab"><span class="tab-icon">鈻?/span><span class="tab-label">鍥剧墖</span></div>
+            <div class="tab"><span class="tab-icon">鈼?/span><span class="tab-label">闊抽</span></div>
+            <div class="tab"><span class="tab-icon">鉁?/span><span class="tab-label">鎶€鑳?/span></div>
+            <div class="tab"><span class="tab-icon">鈿?/span><span class="tab-label">璁剧疆</span></div>
+          </nav>
+        </div>
+      </section>
+
+      <section class="phone" id="image">
+        <div class="screen">
+          <div class="top">
+            <div>
+              <div class="section-title">鍥剧墖闂瓟</div>
+              <div class="subtitle">鎷嶇収銆佺浉鍐屾垨 API 涓婁紶鍥剧墖</div>
+            </div>
+            <button class="icon-btn">鈻?/button>
+          </div>
+          <div class="main-area">
+            <div class="preview">
+              <div class="scan-box"></div>
+            </div>
+            <div class="actions">
+              <div class="action">馃摲 鎷嶇収鎻愰棶</div>
+              <div class="action">馃柤 閫夋嫨鍥剧墖</div>
+            </div>
+            <div class="panel">
+              <div class="tool-title">鎺ㄨ崘闂</div>
+              <div class="tool-body">杩欏紶鍥句腑鏈夊摢浜涘璞★紵鏄惁瀛樺湪瀹夊叏椋庨櫓锛熻鎻愬彇鍥句腑鏂囧瓧銆?/div>
+            </div>
+            <div class="composer">
+              <div class="input">瀵硅繖寮犲浘鐗囨彁闂?..</div>
+              <button class="send">鈫?/button>
+            </div>
+          </div>
+          <nav class="nav">
+            <div class="tab"><span class="tab-icon">馃挰</span><span class="tab-label">瀵硅瘽</span></div>
+            <div class="tab active"><span class="tab-icon">鈻?/span><span class="tab-label">鍥剧墖</span></div>
+            <div class="tab"><span class="tab-icon">鈼?/span><span class="tab-label">闊抽</span></div>
+            <div class="tab"><span class="tab-icon">鉁?/span><span class="tab-label">鎶€鑳?/span></div>
+            <div class="tab"><span class="tab-icon">鈿?/span><span class="tab-label">璁剧疆</span></div>
+          </nav>
+        </div>
+      </section>
+
+      <section class="phone" id="audio">
+        <div class="screen">
+          <div class="top">
+            <div>
+              <div class="section-title">璇煶涓庨煶棰?/div>
+              <div class="subtitle">褰曢煶銆佽浆鍐欍€佺炕璇戝拰闊抽闂瓟</div>
+            </div>
+            <span class="pill amber">鏈湴</span>
+          </div>
+          <div class="main-area">
+            <div class="panel">
+              <div class="tool-title">浼氳褰曢煶 00:48</div>
+              <div class="wave">
+                <div class="bar" style="height: 32px"></div>
+                <div class="bar" style="height: 54px"></div>
+                <div class="bar" style="height: 74px"></div>
+                <div class="bar" style="height: 42px"></div>
+                <div class="bar" style="height: 88px"></div>
+                <div class="bar" style="height: 61px"></div>
+                <div class="bar" style="height: 36px"></div>
+                <div class="bar" style="height: 79px"></div>
+                <div class="bar" style="height: 93px"></div>
+                <div class="bar" style="height: 50px"></div>
+                <div class="bar" style="height: 70px"></div>
+                <div class="bar" style="height: 39px"></div>
+                <div class="bar" style="height: 86px"></div>
+                <div class="bar" style="height: 58px"></div>
+                <div class="bar" style="height: 33px"></div>
+                <div class="bar" style="height: 66px"></div>
+                <div class="bar" style="height: 76px"></div>
+                <div class="bar" style="height: 44px"></div>
+                <div class="bar" style="height: 91px"></div>
+                <div class="bar" style="height: 57px"></div>
+                <div class="bar" style="height: 41px"></div>
+                <div class="bar" style="height: 72px"></div>
+                <div class="bar" style="height: 60px"></div>
+                <div class="bar" style="height: 35px"></div>
+              </div>
+              <div class="record"></div>
+              <div class="caption" style="text-align: center">闀挎寜褰曢煶 路 鏉惧紑鍒嗘瀽</div>
+            </div>
+            <div class="actions">
+              <div class="action">杞啓涓枃</div>
+              <div class="action">缈昏瘧鑻辨枃</div>
+            </div>
+            <div class="bubble assistant" style="max-width: 100%">
+              宸茶瘑鍒?4 浣嶅彂瑷€浜恒€傛槸鍚︾敓鎴愭憳瑕併€佽鍔ㄩ」鍜屾湰鍦版彁閱掞紵
+            </div>
+          </div>
+          <nav class="nav">
+            <div class="tab"><span class="tab-icon">馃挰</span><span class="tab-label">瀵硅瘽</span></div>
+            <div class="tab"><span class="tab-icon">鈻?/span><span class="tab-label">鍥剧墖</span></div>
+            <div class="tab active"><span class="tab-icon">鈼?/span><span class="tab-label">闊抽</span></div>
+            <div class="tab"><span class="tab-icon">鉁?/span><span class="tab-label">鎶€鑳?/span></div>
+            <div class="tab"><span class="tab-icon">鈿?/span><span class="tab-label">璁剧疆</span></div>
+          </nav>
+        </div>
+      </section>
+
+      <section class="phone" id="skills">
+        <div class="screen">
+          <div class="top">
+            <div>
+              <div class="section-title">鎶€鑳?/div>
+              <div class="subtitle">鎸夐渶鎵╁睍妯″瀷鑳藉姏锛屾墽琛屽墠纭</div>
+            </div>
+            <button class="icon-btn">锛?/button>
+          </div>
+          <div class="main-area">
+            <div class="status-row">
+              <div>
+                <strong>宸插惎鐢?5 涓妧鑳?/strong>
+                <div class="subtitle">鑱婂ぉ API 鍙€夋嫨鏄惁鍏佽璋冪敤</div>
+              </div>
+              <span class="pill blue">瀹夊叏</span>
+            </div>
+            <div class="skill-list">
+              <div class="skill">
+                <div class="skill-icon">馃攷</div>
+                <div><strong>鏌ヨ缁村熀鐧剧</strong><span>鑾峰彇涓婚鎽樿</span></div>
+                <div class="switch"></div>
+              </div>
+              <div class="skill">
+                <div class="skill-icon" style="background: var(--amber-soft)">馃椇</div>
+                <div><strong>浜掑姩鍦板浘</strong><span>鐢熸垚浣嶇疆瑙嗗浘</span></div>
+                <div class="switch"></div>
+              </div>
+              <div class="skill">
+                <div class="skill-icon" style="background: var(--rose-soft)">鉁?/div>
+                <div><strong>鍙戦€侀偖浠?/strong><span>Native Intent</span></div>
+                <div class="switch"></div>
+              </div>
+              <div class="skill">
+                <div class="skill-icon">鈻?/div>
+                <div><strong>浜岀淮鐮?/strong><span>鐢熸垚鍥剧墖缁撴灉</span></div>
+                <div class="switch"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="tool-title">鏉冮檺绛栫暐</div>
+              <div class="tool-body">缃戠粶璇锋眰銆佸彂閭欢銆佽鍙栨棩鍘嗙瓑鏁忔劅鎿嶄綔榛樿姣忔璇㈤棶銆?/div>
+            </div>
+          </div>
+          <nav class="nav">
+            <div class="tab"><span class="tab-icon">馃挰</span><span class="tab-label">瀵硅瘽</span></div>
+            <div class="tab"><span class="tab-icon">鈻?/span><span class="tab-label">鍥剧墖</span></div>
+            <div class="tab"><span class="tab-icon">鈼?/span><span class="tab-label">闊抽</span></div>
+            <div class="tab active"><span class="tab-icon">鉁?/span><span class="tab-label">鎶€鑳?/span></div>
+            <div class="tab"><span class="tab-icon">鈿?/span><span class="tab-label">璁剧疆</span></div>
+          </nav>
+        </div>
+      </section>
+
+      <section class="phone" id="api">
+        <div class="screen">
+          <div class="top">
+            <div>
+              <div class="section-title">API 鏈嶅姟</div>
+              <div class="subtitle">OpenAI 鍏煎 路 榛樿浠呮湰鏈鸿闂?/div>
+            </div>
+            <div class="switch"></div>
+          </div>
+          <div class="main-area">
+            <div class="api-header">
+              <strong>鏈湴缃戝叧杩愯涓?/strong>
+              <div class="subtitle" style="color: rgba(255, 255, 255, 0.78)">Bearer Token 宸插惎鐢?/div>
+              <div class="api-url">http://127.0.0.1:11434/v1</div>
+            </div>
+            <div class="setting">
+              <div><strong>鐩戝惉鑼冨洿</strong><span>浠呮湰鏈?/span></div>
+              <span class="pill green">鎺ㄨ崘</span>
+            </div>
+            <div class="setting">
+              <div><strong>鎺ュ彛</strong><span class="mono">/v1/chat/completions</span></div>
+              <span>宸插惎鐢?/span>
+            </div>
+            <div class="setting">
+              <div><strong>闊抽杞啓</strong><span class="mono">/v1/audio/transcriptions</span></div>
+              <span>宸插惎鐢?/span>
+            </div>
+            <div class="setting">
+              <div><strong>宸ュ叿璋冪敤</strong><span>闇€瑕佺敤鎴风‘璁?/span></div>
+              <span>瀹夊叏妯″紡</span>
+            </div>
+            <div class="panel">
+              <div class="tool-title">绀轰緥</div>
+              <div class="tool-body mono">
+                curl -H "Authorization: Bearer local_xxx" \<br />
+                &nbsp; http://127.0.0.1:11434/v1/models
+              </div>
+            </div>
+          </div>
+          <nav class="nav">
+            <div class="tab"><span class="tab-icon">馃挰</span><span class="tab-label">瀵硅瘽</span></div>
+            <div class="tab"><span class="tab-icon">鈻?/span><span class="tab-label">鍥剧墖</span></div>
+            <div class="tab"><span class="tab-icon">鈼?/span><span class="tab-label">闊抽</span></div>
+            <div class="tab"><span class="tab-icon">鉁?/span><span class="tab-label">鎶€鑳?/span></div>
+            <div class="tab active"><span class="tab-icon">鈿?/span><span class="tab-label">璁剧疆</span></div>
+          </nav>
+        </div>
+      </section>
+    </main>
+    <script>
+      const screen = new URLSearchParams(window.location.search).get("screen");
+      if (screen) {
+        document.body.classList.add("single");
+        for (const phone of document.querySelectorAll(".phone")) {
+          phone.style.display = phone.id === screen ? "block" : "none";
+        }
+      }
+    </script>
+  </body>
+</html>
+
+
