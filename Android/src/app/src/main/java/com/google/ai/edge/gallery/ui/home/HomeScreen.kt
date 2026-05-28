@@ -58,7 +58,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ListAlt
 import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AlertDialog
@@ -173,7 +172,6 @@ fun HomeScreen(
   var showTosDialog by remember { mutableStateOf(!tosViewModel.getIsTosAccepted()) }
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
-  val isDevBuild = context.packageName.endsWith(".dev")
 
   var tasks = uiState.tasks
 
@@ -329,6 +327,28 @@ fun HomeScreen(
               }
               Spacer(modifier = Modifier.height(16.dp))
               Row(modifier = Modifier.fillMaxWidth()) {
+                SquareDrawerItem(
+                  label = stringResource(R.string.drawer_notifications_label),
+                  description = stringResource(R.string.drawer_notifications_description),
+                  icon = Icons.Rounded.Notifications,
+                  onClick = {
+                    scope.launch { drawerState.close() }
+                    scope.launch {
+                      delay(50)
+                      onNotificationsClicked()
+                    }
+                  },
+                  modifier = Modifier.weight(1f),
+                  iconBrush =
+                    linearGradient(
+                      colors =
+                        listOf(
+                          MaterialTheme.customColors.taskBgGradientColors[0][0],
+                          MaterialTheme.customColors.taskBgGradientColors[0][1],
+                        )
+                    ),
+                )
+                Spacer(modifier = Modifier.weight(1f))
               }
             }
           }

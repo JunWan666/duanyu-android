@@ -176,10 +176,8 @@ private val PREDEFINED_LLM_TASK_ORDER =
     BuiltInTaskId.LLM_ASK_AUDIO,
     BuiltInTaskId.LLM_CHAT,
     BuiltInTaskId.LLM_AGENT_CHAT,
-    BuiltInTaskId.LLM_PROMPT_LAB,
-    BuiltInTaskId.LLM_TINY_GARDEN,
-    BuiltInTaskId.LLM_MOBILE_ACTIONS,
   )
+private val DUANYU_TARGET_TASK_IDS = PREDEFINED_LLM_TASK_ORDER.toSet()
 
 /**
  * ViewModel responsible for managing models, their download status, and initialization.
@@ -227,7 +225,9 @@ constructor(
   }
 
   fun getActiveCustomTasks(): List<CustomTask> {
-    return customTasks.toList()
+    return customTasks
+      .filter { it.task.id in DUANYU_TARGET_TASK_IDS }
+      .sortedBy { PREDEFINED_LLM_TASK_ORDER.indexOf(it.task.id) }
   }
 
   fun getSelectedModel(): Model? {
