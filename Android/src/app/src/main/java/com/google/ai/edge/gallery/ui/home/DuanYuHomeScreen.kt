@@ -1,0 +1,559 @@
+/*
+ * Copyright 2026 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.ai.edge.gallery.ui.home
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ListAlt
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Mms
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.google.ai.edge.gallery.R
+import com.google.ai.edge.gallery.data.BuiltInTaskId
+import com.google.ai.edge.gallery.data.ModelDownloadStatusType
+import com.google.ai.edge.gallery.data.Task
+import com.google.ai.edge.gallery.ui.common.TaskIcon
+import com.google.ai.edge.gallery.ui.common.tos.AppTosDialog
+import com.google.ai.edge.gallery.ui.common.tos.TosViewModel
+import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerUiState
+import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
+import com.google.ai.edge.gallery.ui.theme.customColors
+import kotlinx.coroutines.delay
+
+private const val NOTIFICATION_PERMISSION_DELAY_MS = 1200L
+
+private data class DuanYuHomeTab(
+  val label: String,
+  val title: String,
+  val subtitle: String,
+  val taskId: String?,
+  val icon: ImageVector,
+)
+
+private val HomeTabs =
+  listOf(
+    DuanYuHomeTab(
+      label = "对话",
+      title = "AI Chat",
+      subtitle = "连续对话",
+      taskId = BuiltInTaskId.LLM_CHAT,
+      icon = Icons.Outlined.Forum,
+    ),
+    DuanYuHomeTab(
+      label = "图片",
+      title = "Ask Image",
+      subtitle = "图片问答",
+      taskId = BuiltInTaskId.LLM_ASK_IMAGE,
+      icon = Icons.Outlined.Mms,
+    ),
+    DuanYuHomeTab(
+      label = "音频",
+      title = "Ask Audio",
+      subtitle = "音频转写",
+      taskId = BuiltInTaskId.LLM_ASK_AUDIO,
+      icon = Icons.Outlined.Mic,
+    ),
+    DuanYuHomeTab(
+      label = "技能",
+      title = "Agent Skills",
+      subtitle = "技能代理",
+      taskId = BuiltInTaskId.LLM_AGENT_CHAT,
+      icon = Icons.Outlined.AutoAwesome,
+    ),
+    DuanYuHomeTab(
+      label = "设置",
+      title = "设置",
+      subtitle = "应用与模型",
+      taskId = null,
+      icon = Icons.Outlined.Settings,
+    ),
+  )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DuanYuHomeScreen(
+  modelManagerViewModel: ModelManagerViewModel,
+  tosViewModel: TosViewModel,
+  navigateToTaskScreen: (Task) -> Unit,
+  onModelsClicked: () -> Unit,
+  onNotificationsClicked: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val uiState by modelManagerViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+  var showSettingsDialog by remember { mutableStateOf(false) }
+  var showTosDialog by remember { mutableStateOf(!tosViewModel.getIsTosAccepted()) }
+  var loadingModelAllowlistDelayed by remember { mutableStateOf(false) }
+
+  LaunchedEffect(uiState.loadingModelAllowlist) {
+    if (uiState.loadingModelAllowlist) {
+      delay(200)
+      loadingModelAllowlistDelayed = uiState.loadingModelAllowlist
+    } else {
+      loadingModelAllowlistDelayed = false
+    }
+  }
+
+  val requestPermissionLauncher =
+    rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+  LaunchedEffect(showTosDialog) {
+    if (!showTosDialog && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      delay(NOTIFICATION_PERMISSION_DELAY_MS)
+      val permissionState =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+      if (permissionState != PackageManager.PERMISSION_GRANTED) {
+        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
+    }
+  }
+
+  if (!showTosDialog) {
+    Scaffold(
+      modifier = modifier.fillMaxSize(),
+      containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+      topBar = {
+        CenterAlignedTopAppBar(
+          title = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+              )
+              Text(
+                text = "DuanYu",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+              )
+            }
+          },
+          actions = {
+            IconButton(onClick = { showSettingsDialog = true }) {
+              Icon(
+                imageVector = Icons.Outlined.Settings,
+                contentDescription = stringResource(R.string.cd_app_settings_icon),
+              )
+            }
+          },
+        )
+      },
+      bottomBar = {
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+          HomeTabs.forEachIndexed { index, tab ->
+            NavigationBarItem(
+              selected = selectedTabIndex == index,
+              onClick = { selectedTabIndex = index },
+              icon = { Icon(tab.icon, contentDescription = null) },
+              label = { Text(tab.label, maxLines = 1) },
+              alwaysShowLabel = true,
+            )
+          }
+        }
+      },
+    ) { innerPadding ->
+      Box(
+        modifier =
+          Modifier.fillMaxSize()
+            .padding(innerPadding)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+      ) {
+        when {
+          loadingModelAllowlistDelayed -> {
+            DuanYuLoadingState(modifier = Modifier.align(Alignment.Center))
+          }
+          uiState.loadingModelAllowlist -> {
+            Spacer(modifier = Modifier.fillMaxSize())
+          }
+          selectedTabIndex == HomeTabs.lastIndex -> {
+            DuanYuSettingsPage(
+              uiState = uiState,
+              onModelsClicked = onModelsClicked,
+              onNotificationsClicked = onNotificationsClicked,
+              onThemeClicked = { showSettingsDialog = true },
+            )
+          }
+          else -> {
+            val tab = HomeTabs[selectedTabIndex]
+            val task = tab.taskId?.let { modelManagerViewModel.getTaskById(it) }
+            DuanYuTaskPage(
+              tab = tab,
+              task = task,
+              uiState = uiState,
+              onStart = navigateToTaskScreen,
+            )
+          }
+        }
+      }
+    }
+  }
+
+  if (showTosDialog) {
+    AppTosDialog(
+      onTosAccepted = {
+        showTosDialog = false
+        tosViewModel.acceptTos()
+      }
+    )
+  }
+
+  if (showSettingsDialog) {
+    SettingsDialog(
+      curThemeOverride = modelManagerViewModel.readThemeOverride(),
+      modelManagerViewModel = modelManagerViewModel,
+      onDismissed = { showSettingsDialog = false },
+    )
+  }
+
+  if (uiState.loadingModelAllowlistError.isNotEmpty()) {
+    AlertDialog(
+      icon = {
+        Icon(
+          Icons.Rounded.Error,
+          contentDescription = stringResource(R.string.cd_error),
+          tint = MaterialTheme.colorScheme.error,
+        )
+      },
+      title = { Text("模型列表加载失败") },
+      text = { Text(uiState.loadingModelAllowlistError) },
+      onDismissRequest = { modelManagerViewModel.clearLoadModelAllowlistError() },
+      confirmButton = {
+        TextButton(onClick = { modelManagerViewModel.loadModelAllowlist() }) { Text("重试") }
+      },
+      dismissButton = {
+        TextButton(onClick = { modelManagerViewModel.clearLoadModelAllowlistError() }) {
+          Text("关闭")
+        }
+      },
+    )
+  }
+}
+
+@Composable
+private fun DuanYuTaskPage(
+  tab: DuanYuHomeTab,
+  task: Task?,
+  uiState: ModelManagerUiState,
+  onStart: (Task) -> Unit,
+) {
+  val colors = MaterialTheme.customColors.taskBgGradientColors
+  val gradientColors =
+    remember(tab.taskId, colors) {
+      val index = HomeTabs.indexOf(tab).coerceAtLeast(0) % colors.size.coerceAtLeast(1)
+      if (colors.isEmpty()) {
+        listOf(Color(0xFF1F7A55), Color(0xFF2456A6))
+      } else {
+        colors[index]
+      }
+    }
+  val models = task?.models.orEmpty()
+  val downloadedCount =
+    models.count { model ->
+      uiState.modelDownloadStatus[model.name]?.status == ModelDownloadStatusType.SUCCEEDED
+    }
+
+  Column(
+    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+  ) {
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Row(
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f),
+          ) {
+            Surface(
+              modifier = Modifier.size(56.dp),
+              shape = RoundedCornerShape(8.dp),
+              color = Color.Transparent,
+            ) {
+              Box(
+                modifier =
+                  Modifier.fillMaxSize()
+                    .background(Brush.linearGradient(gradientColors), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center,
+              ) {
+                Icon(tab.icon, contentDescription = null, tint = Color.White)
+              }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+              Text(
+                text = tab.label,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+              )
+              Text(
+                text = tab.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+              )
+            }
+          }
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+          DuanYuStatPill(label = "模型", value = models.size.toString(), modifier = Modifier.weight(1f))
+          DuanYuStatPill(
+            label = "已下载",
+            value = downloadedCount.toString(),
+            modifier = Modifier.weight(1f),
+          )
+        }
+        Spacer(modifier = Modifier.height(18.dp))
+        Button(
+          enabled = task != null,
+          onClick = { task?.let(onStart) },
+          modifier = Modifier.fillMaxWidth().height(48.dp),
+          shape = RoundedCornerShape(8.dp),
+        ) {
+          Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+          Text(text = "选择模型并开始", modifier = Modifier.padding(start = 8.dp))
+        }
+      }
+    }
+
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+        Text(
+          text = "当前入口",
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          if (task != null) {
+            TaskIcon(task = task, width = 48.dp)
+          } else {
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+              Icon(tab.icon, contentDescription = null, modifier = Modifier.padding(12.dp))
+            }
+          }
+          Column(modifier = Modifier.padding(start = 14.dp).weight(1f)) {
+            Text(
+              text = task?.label ?: tab.title,
+              style = MaterialTheme.typography.titleSmall,
+              fontWeight = FontWeight.Medium,
+            )
+            Text(
+              text = tab.subtitle,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun DuanYuSettingsPage(
+  uiState: ModelManagerUiState,
+  onModelsClicked: () -> Unit,
+  onNotificationsClicked: () -> Unit,
+  onThemeClicked: () -> Unit,
+) {
+  val totalModels = uiState.tasks.flatMap { it.models }.distinctBy { it.name }.size
+  val downloadedModels =
+    uiState.modelDownloadStatus.values.count { it.status == ModelDownloadStatusType.SUCCEEDED }
+
+  Column(
+    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+  ) {
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+        Text("设置", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+        Text(
+          "模型、通知、主题",
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+          DuanYuStatPill(label = "模型", value = totalModels.toString(), modifier = Modifier.weight(1f))
+          DuanYuStatPill(
+            label = "已下载",
+            value = downloadedModels.toString(),
+            modifier = Modifier.weight(1f),
+          )
+        }
+      }
+    }
+
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        DuanYuSettingsRow(
+          icon = Icons.AutoMirrored.Rounded.ListAlt,
+          title = "模型管理",
+          subtitle = "下载、导入、删除",
+          onClick = onModelsClicked,
+        )
+        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+        DuanYuSettingsRow(
+          icon = Icons.Rounded.Notifications,
+          title = "通知",
+          subtitle = "定时提醒与任务通知",
+          onClick = onNotificationsClicked,
+        )
+        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+        DuanYuSettingsRow(
+          icon = Icons.Outlined.Settings,
+          title = "主题设置",
+          subtitle = "浅色、深色、跟随系统",
+          onClick = onThemeClicked,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun DuanYuSettingsRow(
+  icon: ImageVector,
+  title: String,
+  subtitle: String,
+  onClick: () -> Unit,
+) {
+  Row(
+    modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(18.dp),
+    horizontalArrangement = Arrangement.spacedBy(14.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+      Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = Modifier.padding(10.dp).size(22.dp),
+      )
+    }
+    Column(modifier = Modifier.weight(1f)) {
+      Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+      Text(
+        subtitle,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+  }
+}
+
+@Composable
+private fun DuanYuStatPill(label: String, value: String, modifier: Modifier = Modifier) {
+  Surface(
+    modifier = modifier,
+    shape = RoundedCornerShape(8.dp),
+    color = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+      Text(
+        text = label,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    }
+  }
+}
+
+@Composable
+private fun DuanYuLoadingState(modifier: Modifier = Modifier) {
+  Row(
+    modifier = modifier.clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surface)
+      .padding(horizontal = 18.dp, vertical = 14.dp),
+    horizontalArrangement = Arrangement.spacedBy(12.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    CircularProgressIndicator(strokeWidth = 3.dp, modifier = Modifier.size(20.dp))
+    Text("正在加载模型列表", style = MaterialTheme.typography.bodyMedium)
+  }
+}

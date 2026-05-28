@@ -86,7 +86,7 @@ class GalleryFcmMessagingService : FirebaseMessagingService() {
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
       )
 
-    val channelId = "gallery_high_priority_push_channel"
+    val channelId = "duanyu_high_priority_push_channel"
     val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
     val notificationBuilder =
       NotificationCompat.Builder(this, channelId)

@@ -26,16 +26,16 @@
   <string name="aicore_image_limit_message" translatable="false">The current model can only support 1 image per chat. To ask about another image, create a new chat.</string>
   <string name="aichat_initializing_title" translatable="false">Initializing model</string>
   <string name="aichat_initializing_content" translatable="false">Sit tight, this can take up to 1 minute</string>
-  <string name="app_intro" translatable="false">Explore a world of amazing on-device models from</string>
-  <string name="app_name" translatable="false">Google AI Edge Gallery</string>
-  <string name="app_name_first_part" translatable="false">Google AI</string>
-  <string name="app_name_second_part" translatable="false">Edge Gallery</string>
+  <string name="app_intro" translatable="false">本地 AI 对话、图片问答、音频转写与技能自动化</string>
+  <string name="app_name" translatable="false">端语</string>
+  <string name="app_name_first_part" translatable="false">端语</string>
+  <string name="app_name_second_part" translatable="false">DuanYu</string>
   <string name="askimage_emptystate_title" translatable="false">Ask Image</string>
   <string name="askimage_emptystate_content" translatable="false">To get started, tap the + below to add an image (max 10 images per chat) and type a prompt to ask a question about it!</string>
   <string name="askimage_emptystate_content_aicore" translatable="false">To get started, tap the + below to add an image (max 1 image per chat) and type a prompt to ask a question about it!</string>
   <string name="askaudio_emptystate_title" translatable="false">Ask Audio</string>
   <string name="askaudio_emptystate_content" translatable="false">To get started, tap the + below to add a audio clip (limited to 1 clip up to 30 seconds) and type a prompt to transcribe or translate it!</string>
-  <string name="gallery_news_notification_title" translatable="false">Gallery News</string>
+  <string name="gallery_news_notification_title" translatable="false">端语通知</string>
   <string name="baseline" translatable="false">Baseline</string>
   <string name="basic_info" translatable="false">Basic info</string>
   <string name="benchmark" translatable="false">Benchmark</string>
@@ -92,17 +92,17 @@
   <string name="drawer_settings_label" translatable="false">Settings</string>
   <string name="drawer_settings_description" translatable="false">Manage application settings</string>
   <string name="drawer_models_label" translatable="false">Models</string>
-  <string name="drawer_models_description" translatable="false">Browse, try, and benchmark models</string>
-  <string name="drawer_notifications_label" translatable="false">Notifications</string>
-  <string name="drawer_notifications_description" translatable="false">View scheduled notifications</string>
-  <string name="notifications_title" translatable="false">Notifications</string>
-  <string name="notifications_empty_state" translatable="false">No scheduled notifications</string>
-  <string name="notifications_delete_dialog_title" translatable="false">Delete Notification</string>
-  <string name="notifications_delete_dialog_content" translatable="false">Are you sure you want to delete the scheduled notification \"%s\"?</string>
-  <string name="notifications_time_label" translatable="false">Time: %s</string>
-  <string name="notifications_date_label" translatable="false">Date: %s</string>
-  <string name="notifications_repeat_daily" translatable="false">Daily</string>
-  <string name="notifications_repeat_one_time" translatable="false">One-time</string>
+  <string name="drawer_models_description" translatable="false">管理本地模型和导入文件</string>
+  <string name="drawer_notifications_label" translatable="false">通知</string>
+  <string name="drawer_notifications_description" translatable="false">查看已计划的通知</string>
+  <string name="notifications_title" translatable="false">通知</string>
+  <string name="notifications_empty_state" translatable="false">暂无计划通知</string>
+  <string name="notifications_delete_dialog_title" translatable="false">删除通知</string>
+  <string name="notifications_delete_dialog_content" translatable="false">确定要删除计划通知 \"%s\" 吗？</string>
+  <string name="notifications_time_label" translatable="false">时间：%s</string>
+  <string name="notifications_date_label" translatable="false">日期：%s</string>
+  <string name="notifications_repeat_daily" translatable="false">每天</string>
+  <string name="notifications_repeat_one_time" translatable="false">一次</string>
   <string name="edit" translatable="false">Edit</string>
   <string name="edit_secret" translatable="false">Edit secret</string>
   <string name="enter_instruction" translatable="false">Enter instruction</string>
@@ -142,10 +142,10 @@
   <string name="model_not_downloaded_msg" translatable="false">Model not downloaded yet</string>
   <string name="name" translatable="false">Name</string>
   <string name="no_cutouts_collected" translatable="false">No cutouts collected</string>
-  <string name="notification_content_fail" translatable="false">Failed to download model "%s"</string>
-  <string name="notification_content_success" translatable="false">Model "%s" has been downloaded</string>
-  <string name="notification_title_fail" translatable="false">Model download failed</string>
-  <string name="notification_title_success" translatable="false">Model download succeeded</string>
+  <string name="notification_content_fail" translatable="false">模型 \"%s\" 下载失败</string>
+  <string name="notification_content_success" translatable="false">模型 \"%s\" 已下载完成</string>
+  <string name="notification_title_fail" translatable="false">模型下载失败</string>
+  <string name="notification_title_success" translatable="false">模型下载完成</string>
   <string name="ok" translatable="false">OK</string>
   <string name="paste_from_clipboard" translatable="false">Paste from clipboard</string>
   <string name="pick_from_album" translatable="false">Pick from album</string>
@@ -187,7 +187,7 @@
   <string name="test" translatable="false">Test</string>
   <string name="text_image_generation_text_field_placeholder" translatable="false">Type prompt…</string>
   <string name="text_input_placeholder_llm_chat" translatable="false">Type prompt…</string>
-  <string name="tos_dialog_title_app" translatable="false">Welcome to Google AI Edge Gallery</string>
+  <string name="tos_dialog_title_app" translatable="false">欢迎使用端语</string>
   <string name="tos_dialog_title_gemma" translatable="false">Gemma Terms of Use</string>
   <string name="tos_dialog_accept_and_continue_button_label" translatable="false">Accept &amp; continue</string>
   <string name="tos_dialog_agree_and_continue_button_label" translatable="false">Agree &amp; continue</string>
@@ -339,7 +339,7 @@
   <string name="mcp_tool_revoke_permission_content" translatable="false">Are you sure you want to revoke permission to automatically call this tool?</string>
   <string name="manage_mcp_servers" translatable="false">Manage MCP servers</string>
   <string name="add_mcp_server" translatable="false">Add MCP server</string>
-  <string name="learn_more_about_mcp" translatable="false">Learn more about MCP in Google AI Edge Gallery</string>
+  <string name="learn_more_about_mcp" translatable="false">了解端语中的 MCP</string>
   <string name="learn_more_about_mcp_short" translatable="false">Learn more</string>
   <string name="search_mcp_server" translatable="false">Search for an MCP server</string>
   <plurals name="mcp_servers_count" translatable="false">

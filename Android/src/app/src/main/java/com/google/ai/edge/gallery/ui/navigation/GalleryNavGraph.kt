@@ -76,7 +76,7 @@ import com.google.ai.edge.gallery.firebaseAnalytics
 import com.google.ai.edge.gallery.ui.common.ErrorDialog
 import com.google.ai.edge.gallery.ui.common.ModelPageAppBar
 import com.google.ai.edge.gallery.ui.common.chat.ModelDownloadStatusInfoPanel
-import com.google.ai.edge.gallery.ui.home.HomeScreen
+import com.google.ai.edge.gallery.ui.home.DuanYuHomeScreen
 import com.google.ai.edge.gallery.ui.modelmanager.GlobalModelManager
 import com.google.ai.edge.gallery.ui.modelmanager.ModelInitializationStatusType
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManager
@@ -185,10 +185,9 @@ fun GalleryNavHost(
     // Home screen.
     composable(route = ROUTE_HOMESCREEN) {
       Box(modifier = modifier.fillMaxSize()) {
-        HomeScreen(
+        DuanYuHomeScreen(
           modelManagerViewModel = modelManagerViewModel,
           tosViewModel = hiltViewModel(),
-          enableAnimation = enableHomeScreenAnimation,
           navigateToTaskScreen = { task ->
             pickedTask = task
             enableModelListAnimation = true
@@ -200,7 +199,6 @@ fun GalleryNavHost(
           },
           onModelsClicked = { navController.navigate(ROUTE_MODEL_MANAGER) },
           onNotificationsClicked = { navController.navigate(ROUTE_NOTIFICATIONS) },
-          gm4 = true,
         )
       }
     }
@@ -382,8 +380,8 @@ fun GalleryNavHost(
     intent.data = null
     val uriStr = data.toString()
     Log.d(TAG, "navigation link clicked: $data")
-    // 1. Precise model deep links: com.google.ai.edge.gallery://model/<taskId>/<modelName>
-    if (uriStr.startsWith("com.google.ai.edge.gallery://model/")) {
+    // 1. Precise model deep links: duanyu://model/<taskId>/<modelName>
+    if (uriStr.startsWith("duanyu://model/")) {
       if (data.pathSegments.size >= 2) {
         val taskId = data.pathSegments.get(data.pathSegments.size - 2)
         val modelName = data.pathSegments.last()
@@ -400,10 +398,10 @@ fun GalleryNavHost(
       } else {
         Log.e(TAG, "Malformed deep link URI received: $data")
       }
-    } else if (uriStr == "com.google.ai.edge.gallery://global_model_manager") {
+    } else if (uriStr == "duanyu://global_model_manager") {
       navController.navigate(ROUTE_MODEL_MANAGER)
     } else {
-      // 2. Dynamic task-level deep links: com.google.ai.edge.gallery://<taskId>
+      // 2. Dynamic task-level deep links: duanyu://<taskId>
       val host = data.host
       if (host != null) {
         val queryStr = data.getQueryParameter("query")

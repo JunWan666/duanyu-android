@@ -170,7 +170,7 @@ fun Context.createTempPictureUri(
 
   return FileProvider.getUriForFile(
     applicationContext,
-    "com.google.ai.edge.gallery.provider" /* {applicationId}.provider */,
+    "${applicationContext.packageName}.provider",
     tempFile,
   )
 }

@@ -310,7 +310,7 @@ object IntentHandler {
           notificationProtoBuilder.setDeeplink(params.deeplink)
         } else if (params.task_id != null && params.model_name != null) {
           val uri =
-            "com.google.ai.edge.gallery://model/${params.task_id}/${params.model_name}"
+            "duanyu://model/${params.task_id}/${params.model_name}"
               .toUri()
               .buildUpon()
               .appendQueryParameter("query", params.message)
@@ -320,7 +320,7 @@ object IntentHandler {
           notificationProtoBuilder.setDeeplink(uri)
         } else if (params.task_id != null) {
           val uri =
-            "com.google.ai.edge.gallery://${params.task_id}/"
+            "duanyu://${params.task_id}/"
               .toUri()
               .buildUpon()
               .appendQueryParameter("query", params.message)
@@ -330,7 +330,7 @@ object IntentHandler {
           notificationProtoBuilder.setDeeplink(uri)
         } else {
           val fallbackUri =
-            "com.google.ai.edge.gallery://llm_agent_chat/"
+            "duanyu://llm_agent_chat/"
               .toUri()
               .buildUpon()
               .appendQueryParameter("query", params.message)
