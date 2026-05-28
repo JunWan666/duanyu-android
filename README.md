@@ -28,6 +28,7 @@
 已经包含：
 
 - 产品需求文档：[product-docs/DuanYu-PRD.md](product-docs/DuanYu-PRD.md)
+- 实施计划文档：[docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
 - UI 概念图：[product-docs/assets](product-docs/assets)
 - APK 图标素材：[brand](brand)
 - 上游 Android 技术底座：[Android](Android)
