@@ -24,6 +24,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -267,7 +268,6 @@ fun DuanYuHomeScreen(
           }
           selectedTabIndex == HomeTabs.lastIndex -> {
             DuanYuSettingsPage(
-              uiState = uiState,
               currentTheme = modelManagerViewModel.readThemeOverride(),
               modelManagerViewModel = modelManagerViewModel,
               onModelsClicked = onModelsClicked,
@@ -464,25 +464,23 @@ private fun DuanYuTaskPage(
 
 @Composable
 private fun DuanYuSettingsPage(
-  uiState: ModelManagerUiState,
   currentTheme: Theme,
   modelManagerViewModel: ModelManagerViewModel,
   onModelsClicked: () -> Unit,
   onNotificationsClicked: () -> Unit,
 ) {
   val context = LocalContext.current
-  val totalModels = uiState.tasks.flatMap { it.models }.distinctBy { it.name }.size
-  val downloadedModels =
-    uiState.modelDownloadStatus.values.count { it.status == ModelDownloadStatusType.SUCCEEDED }
   var destination by rememberSaveable { mutableStateOf(DuanYuSettingsDestination.ROOT) }
   var selectedTheme by remember(currentTheme) { mutableStateOf(currentTheme) }
   var selectedLanguage by remember { mutableStateOf(DuanYuLocaleManager.readLanguage(context)) }
 
+  BackHandler(enabled = destination != DuanYuSettingsDestination.ROOT) {
+    destination = DuanYuSettingsDestination.ROOT
+  }
+
   when (destination) {
     DuanYuSettingsDestination.ROOT ->
       DuanYuSettingsRootPage(
-        totalModels = totalModels,
-        downloadedModels = downloadedModels,
         onModelsClicked = onModelsClicked,
         onNotificationsClicked = onNotificationsClicked,
         onApiClicked = { destination = DuanYuSettingsDestination.API },
@@ -606,8 +604,6 @@ private fun DuanYuSettingsPage(
 
 @Composable
 private fun DuanYuSettingsRootPage(
-  totalModels: Int,
-  downloadedModels: Int,
   onModelsClicked: () -> Unit,
   onNotificationsClicked: () -> Unit,
   onApiClicked: () -> Unit,
@@ -632,19 +628,6 @@ private fun DuanYuSettingsRootPage(
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-          DuanYuStatPill(
-            label = stringResource(R.string.duanyu_models_label),
-            value = totalModels.toString(),
-            modifier = Modifier.weight(1f),
-          )
-          DuanYuStatPill(
-            label = stringResource(R.string.duanyu_downloaded_label),
-            value = downloadedModels.toString(),
-            modifier = Modifier.weight(1f),
-          )
-        }
       }
     }
 
@@ -722,7 +705,7 @@ private fun DuanYuSettingsTile(
   onClick: () -> Unit,
 ) {
   Surface(
-    modifier = modifier.height(86.dp),
+    modifier = modifier.height(104.dp),
     shape = RoundedCornerShape(8.dp),
     color = MaterialTheme.colorScheme.surface,
   ) {
@@ -770,7 +753,7 @@ private fun DuanYuSettingsTile(
           subtitle,
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
-          maxLines = 1,
+          maxLines = 2,
           overflow = TextOverflow.Ellipsis,
         )
       }
