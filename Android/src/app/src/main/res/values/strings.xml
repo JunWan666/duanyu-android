@@ -199,6 +199,7 @@
   <string name="model_manager">Model Manager</string>
   <string name="model_manager_select_task_title">Select a use case to try</string>
   <string name="model_not_downloaded_msg">Model not downloaded yet</string>
+  <string name="download_and_try">Download &amp; Try it</string>
   <string name="name" translatable="false">Name</string>
   <string name="no_cutouts_collected" translatable="false">No cutouts collected</string>
   <string name="notification_content_fail" translatable="false">模型 \"%s\" 下载失败</string>
@@ -334,6 +335,7 @@
   <string name="disclaimer_dialog_title" translatable="false">Add third-party skill</string>
   <string name="disclaimer_dialog_agree" translatable="false">Agree</string>
   <string name="delete_script_dialog_title" translatable="false">Delete script</string>
+  <string name="delete_script_dialog_content" translatable="false">Are you sure you want to delete \"%s\"?</string>
   <string name="delete_skill_dialog_title" translatable="false">Delete skill</string>
   <string name="delete_skill_dialog_content" translatable="false">Are you sure you want to delete the skill?</string>
   <string name="delete_selected_skills_title" translatable="false">Delete selected skills</string>
@@ -353,6 +355,7 @@
   <string name="describe_output_data" translatable="false">Describe output data</string>
   <string name="duplicated_script_name" translatable="false">Duplicated script name</string>
   <string name="enable_skill_dialog_content" translatable="false">Please enable the skill by tapping the Skills button below.</string>
+  <string name="disabled_skill_dialog_title" translatable="false">The \"%s\" skill is currently disabled</string>
   <string name="edit_skill" translatable="false">Edit skill</string>
   <string name="enter_skill_url" translatable="false">Enter URL of skill\'s root directory</string>
   <string name="featured_skills_title" translatable="false">Featured skills</string>
@@ -389,6 +392,12 @@
   <string name="skill_description_input_description" translatable="false">REQUIRED. A brief description of the skill\'s function and trigger conditions or keywords.</string>
   <string name="skill_instructions_input_description" translatable="false">Detailed instructions in Markdown format that LLM must follow to accomplish the task.</string>
   <string name="use_call_js_template" translatable="false">Use Call JS template</string>
+  <string name="record_audio_clip" translatable="false">Record audio clip</string>
+  <string name="pick_wav_file" translatable="false">Pick wav file</string>
+  <string name="skill_tester_input_data" translatable="false">Input Data</string>
+  <string name="skill_tester_custom_data" translatable="false">Custom Data</string>
+  <string name="skill_tester_result" translatable="false">Result</string>
+  <string name="skill_tester_logs" translatable="false">Logs</string>
 
   <!-- Strings for MCP -->
   <string name="mcp" translatable="false">MCP</string>

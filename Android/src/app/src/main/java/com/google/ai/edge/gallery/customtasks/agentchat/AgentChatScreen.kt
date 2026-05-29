@@ -698,7 +698,7 @@ fun AgentChatScreen(
   if (showAlertForDisabledSkill) {
     AlertDialog(
       onDismissRequest = { showAlertForDisabledSkill = false },
-      title = { Text("The \"$disabledSkillName\" skill is currently disabled") },
+      title = { Text(stringResource(R.string.disabled_skill_dialog_title, disabledSkillName)) },
       text = { Text(stringResource(R.string.enable_skill_dialog_content)) },
       confirmButton = {
         Button(onClick = { showAlertForDisabledSkill = false }) {
