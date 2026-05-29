@@ -38,6 +38,7 @@ google-services.json
 
 # Local generated output
 build-output/
+build-output/apks/
 .jdk/
 
 # Logs and temp files
