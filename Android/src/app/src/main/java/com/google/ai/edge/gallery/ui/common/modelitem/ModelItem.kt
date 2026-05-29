@@ -16,6 +16,8 @@
 
 package com.google.ai.edge.gallery.ui.common.modelitem
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
@@ -38,15 +40,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.UnfoldLess
 import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -68,12 +74,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.google.ai.edge.gallery.R
+import com.google.ai.edge.gallery.data.Accelerator
 import com.google.ai.edge.gallery.data.Model
 import com.google.ai.edge.gallery.data.ModelDownloadStatus
 import com.google.ai.edge.gallery.data.ModelDownloadStatusType
 import com.google.ai.edge.gallery.data.RuntimeType
 import com.google.ai.edge.gallery.data.Task
 import com.google.ai.edge.gallery.ui.common.MarkdownText
+import com.google.ai.edge.gallery.ui.common.humanReadableSize
 import com.google.ai.edge.gallery.ui.common.tos.TosViewModel
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
 import com.google.ai.edge.gallery.ui.theme.bodyMediumMedium
@@ -436,6 +444,7 @@ fun ModelItemActionMenu(
 ) {
   var showMenu by remember { mutableStateOf(false) }
   var showConfirmDeleteDialog by remember { mutableStateOf(false) }
+  var showDetailsDialog by remember { mutableStateOf(false) }
   val context = LocalContext.current
 
   Box(modifier = modifier) {
@@ -465,6 +474,21 @@ fun ModelItemActionMenu(
         )
       }
       if (showExportButton) {
+        DropdownMenuItem(
+          text = {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+              Icon(Icons.Outlined.Info, contentDescription = null)
+              Text(stringResource(R.string.duanyu_model_details))
+            }
+          },
+          onClick = {
+            showMenu = false
+            showDetailsDialog = true
+          },
+        )
         DropdownMenuItem(
           text = {
             Row(
@@ -509,7 +533,106 @@ fun ModelItemActionMenu(
         onDismiss = { showConfirmDeleteDialog = false },
       )
     }
+    if (showDetailsDialog) {
+      ModelDetailsDialog(
+        model = model,
+        onDismiss = { showDetailsDialog = false },
+      )
+    }
   }
+}
+
+@Composable
+private fun ModelDetailsDialog(model: Model, onDismiss: () -> Unit) {
+  val context = LocalContext.current
+  val path = remember(model) { model.getPath(context = context) }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(stringResource(R.string.duanyu_model_details)) },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        DetailRow(label = stringResource(R.string.duanyu_model_detail_name), value = model.name)
+        DetailRow(
+          label = stringResource(R.string.duanyu_model_detail_source),
+          value =
+            stringResource(
+              if (model.imported) {
+                R.string.duanyu_model_detail_source_imported
+              } else {
+                R.string.duanyu_model_detail_source_online
+              }
+            ),
+        )
+        DetailRow(
+          label = stringResource(R.string.duanyu_model_detail_runtime),
+          value = model.runtimeType.name,
+        )
+        DetailRow(
+          label = stringResource(R.string.duanyu_model_detail_file_name),
+          value = model.downloadFileName,
+        )
+        DetailRow(
+          label = stringResource(R.string.duanyu_model_detail_file_size),
+          value = model.totalBytes.humanReadableSize(),
+        )
+        DetailRow(
+          label = stringResource(R.string.duanyu_model_detail_inputs),
+          value = model.inputTypesLabel(context),
+        )
+        DetailRow(
+          label = stringResource(R.string.duanyu_model_detail_accelerators),
+          value = model.acceleratorsLabel(),
+        )
+        DetailRow(label = stringResource(R.string.duanyu_model_detail_path), value = path)
+      }
+    },
+    confirmButton = {
+      Button(onClick = { copyModelPath(context = context, path = path) }) {
+        Text(stringResource(R.string.duanyu_copy_path))
+      }
+    },
+    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+  )
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+  Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Text(
+      label,
+      style = MaterialTheme.typography.labelMedium,
+      color = MaterialTheme.colorScheme.primary,
+    )
+    Text(
+      value,
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurface,
+    )
+  }
+}
+
+private fun Model.inputTypesLabel(context: Context): String {
+  val inputs = mutableListOf(context.getString(R.string.duanyu_model_input_text))
+  if (llmSupportImage) {
+    inputs.add(context.getString(R.string.duanyu_model_input_image))
+  }
+  if (llmSupportAudio) {
+    inputs.add(context.getString(R.string.duanyu_model_input_audio))
+  }
+  return inputs.joinToString(" / ")
+}
+
+private fun Model.acceleratorsLabel(): String {
+  if (accelerators.isEmpty()) {
+    return Accelerator.CPU.label.uppercase()
+  }
+  return accelerators.joinToString(" / ") { it.label.uppercase() }
+}
+
+private fun copyModelPath(context: Context, path: String) {
+  val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+  clipboard.setPrimaryClip(ClipData.newPlainText("model_path", path))
+  Toast.makeText(context, R.string.duanyu_path_copied, Toast.LENGTH_SHORT).show()
 }
 
 private fun exportModel(context: Context, model: Model) {
