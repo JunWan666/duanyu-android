@@ -37,6 +37,12 @@
   <string name="duanyu_settings_subtitle">模型、API、语言、主题</string>
   <string name="duanyu_model_manager_title">模型管理</string>
   <string name="duanyu_model_manager_subtitle">下载、导入、删除</string>
+  <string name="duanyu_model_tab_online">在线安装</string>
+  <string name="duanyu_model_tab_installed">已安装</string>
+  <string name="duanyu_model_filter_all">全部</string>
+  <string name="duanyu_model_search_placeholder">搜索在线模型</string>
+  <string name="duanyu_model_empty_online">当前筛选下没有可安装模型。</string>
+  <string name="duanyu_model_empty_installed">这个分类下还没有已安装模型。</string>
   <string name="duanyu_api_service_title">API 服务</string>
   <string name="duanyu_api_service_subtitle">OpenAI 兼容本地接口</string>
   <string name="duanyu_api_service_detail">本地 API 服务将在后续里程碑实现。它会提供 OpenAI 兼容的模型列表、聊天补全、音频转写和技能接口，并且默认关闭。</string>

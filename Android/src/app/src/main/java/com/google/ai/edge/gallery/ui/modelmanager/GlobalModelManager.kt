@@ -27,6 +27,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -44,30 +46,36 @@ import androidx.compose.material.icons.automirrored.rounded.ListAlt
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +90,9 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.google.ai.edge.gallery.R
+import com.google.ai.edge.gallery.data.BuiltInTaskId
 import com.google.ai.edge.gallery.data.Model
+import com.google.ai.edge.gallery.data.ModelDownloadStatusType
 import com.google.ai.edge.gallery.data.Task
 import com.google.ai.edge.gallery.proto.ImportedModel
 import com.google.ai.edge.gallery.ui.common.TaskIcon
@@ -94,6 +104,30 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "AGGlobalMM"
 
+private enum class ModelManagerPage {
+  ONLINE,
+  INSTALLED,
+}
+
+private data class ModelCategoryFilter(val labelRes: Int, val taskId: String?)
+
+private val MODEL_CATEGORY_FILTERS =
+  listOf(
+    ModelCategoryFilter(R.string.duanyu_model_filter_all, null),
+    ModelCategoryFilter(R.string.duanyu_tab_chat, BuiltInTaskId.LLM_CHAT),
+    ModelCategoryFilter(R.string.duanyu_tab_image, BuiltInTaskId.LLM_ASK_IMAGE),
+    ModelCategoryFilter(R.string.duanyu_tab_audio, BuiltInTaskId.LLM_ASK_AUDIO),
+    ModelCategoryFilter(R.string.duanyu_tab_skills, BuiltInTaskId.LLM_AGENT_CHAT),
+  )
+
+private fun Model.matchesQuery(query: String): Boolean {
+  val normalizedQuery = query.trim().lowercase()
+  if (normalizedQuery.isEmpty()) {
+    return true
+  }
+  return listOf(name, displayName, info, url).any { it.lowercase().contains(normalizedQuery) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlobalModelManager(
@@ -104,8 +138,6 @@ fun GlobalModelManager(
   modifier: Modifier = Modifier,
 ) {
   val uiState by viewModel.uiState.collectAsState()
-  val builtInModels = remember { mutableStateListOf<Model>() }
-  val importedModels = remember { mutableStateListOf<Model>() }
   val taskCandidates = remember { mutableStateListOf<Task>() }
   var modelForTaskCandidate by remember { mutableStateOf<Model?>(null) }
   var showTaskSelectorBottomSheet by remember { mutableStateOf(false) }
@@ -121,6 +153,9 @@ fun GlobalModelManager(
   val context = LocalContext.current
   val snackbarHostState = remember { SnackbarHostState() }
   val modelItemExpandedStates = remember { mutableStateMapOf<String, Boolean>() }
+  var selectedPageIndex by rememberSaveable { mutableIntStateOf(0) }
+  var selectedCategoryIndex by rememberSaveable { mutableIntStateOf(0) }
+  var searchQuery by rememberSaveable { mutableStateOf("") }
 
   val filePickerLauncher: ActivityResultLauncher<Intent> =
     rememberLauncherForActivityResult(
@@ -147,43 +182,68 @@ fun GlobalModelManager(
       }
     }
 
-  LaunchedEffect(uiState.modelImportingUpdateTrigger) {
-    val allowlistModels = viewModel.allowlistModels
-    val allowlistOrderMap = allowlistModels.withIndex().associate { it.value.name to it.index }
-
-    val sortedModels =
-      viewModel
-        .getAllModels()
-        // Filter to include only top-level models (those without a parent).
-        .filter { it.parentModelName.isNullOrEmpty() }
-        .sortedWith(
-          compareBy<Model> { model ->
-              // Sort by the index in allowlistModels. Models not in the allowlist come last.
-              allowlistOrderMap[model.name] ?: Int.MAX_VALUE
-            }
-            .thenBy { model ->
-              // If not in the allowlist, sort by their names.
-              model.name
-            }
-        )
-    builtInModels.clear()
-    builtInModels.addAll(sortedModels.filter { !it.imported })
-    importedModels.clear()
-    importedModels.addAll(sortedModels.filter { it.imported })
-  }
-
   // Calculate model variants by grouping models with a parentModelName.
   val modelVariants by
-    remember(uiState.modelImportingUpdateTrigger) {
+    remember(uiState.tasks, uiState.modelImportingUpdateTrigger) {
       derivedStateOf {
         val allModels = uiState.tasks.flatMap { it.models }
         allModels.filter { it.parentModelName != null }.groupBy { it.parentModelName!! }
       }
     }
 
+  val allTopLevelModels by
+    remember(uiState.tasks, uiState.modelImportingUpdateTrigger) {
+      derivedStateOf {
+        val allowlistOrderMap =
+          viewModel.allowlistModels.withIndex().associate { it.value.name to it.index }
+        viewModel
+          .getAllModels()
+          .filter { it.parentModelName.isNullOrEmpty() }
+          .sortedWith(
+            compareBy<Model> { model -> allowlistOrderMap[model.name] ?: Int.MAX_VALUE }
+              .thenBy { model -> model.name }
+          )
+      }
+    }
+
+  fun variantNamesFor(model: Model): Set<String> {
+    return modelVariants[model.name]?.map { it.name }?.toSet() ?: emptySet()
+  }
+
+  fun tasksForModel(model: Model): List<Task> {
+    val variantNames = variantNamesFor(model)
+    return uiState.tasks.filter { task ->
+      task.models.any { it.name == model.name || it.name in variantNames }
+    }
+  }
+
+  fun isInstalled(model: Model): Boolean {
+    if (model.imported) {
+      return true
+    }
+    val status = uiState.modelDownloadStatus[model.name]?.status
+    if (status == ModelDownloadStatusType.SUCCEEDED) {
+      return true
+    }
+    return modelVariants[model.name]?.any {
+      uiState.modelDownloadStatus[it.name]?.status == ModelDownloadStatusType.SUCCEEDED
+    } == true
+  }
+
+  fun matchesSelectedCategory(model: Model): Boolean {
+    val selectedTaskId = MODEL_CATEGORY_FILTERS[selectedCategoryIndex].taskId ?: return true
+    return tasksForModel(model).any { it.id == selectedTaskId }
+  }
+
+  val selectedPage = ModelManagerPage.entries[selectedPageIndex]
+  val onlineModels =
+    allTopLevelModels.filter { !it.imported && it.matchesQuery(searchQuery) }
+      .filter(::matchesSelectedCategory)
+  val installedModels = allTopLevelModels.filter(::isInstalled).filter(::matchesSelectedCategory)
+  val visibleModels = if (selectedPage == ModelManagerPage.ONLINE) onlineModels else installedModels
+
   val handleClickModel: (Model) -> Unit = { model ->
-    val tasks = viewModel.uiState.value.tasks
-    val tasksForModel = tasks.filter { task -> task.models.any { it.name == model.name } }
+    val tasksForModel = tasksForModel(model)
     // If there is only one task for the model, navigate to the model directly.
     if (tasksForModel.size == 1) {
       onModelSelected(tasksForModel[0], model)
@@ -218,8 +278,7 @@ fun GlobalModelManager(
                 tint = MaterialTheme.colorScheme.onSurface,
               )
               Text(
-                text =
-                  "${stringResource(R.string.drawer_models_label)} (${builtInModels.size + importedModels.size})",
+                text = "${stringResource(R.string.duanyu_models_label)} (${visibleModels.size})",
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
               )
@@ -240,15 +299,16 @@ fun GlobalModelManager(
       )
     },
     floatingActionButton = {
-      // A floating action button to show "import model" bottom sheet.
-      val cdImportModelFab = stringResource(R.string.cd_import_model_button)
-      SmallFloatingActionButton(
-        onClick = { showImportModelSheet = true },
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.secondary,
-        modifier = Modifier.semantics { contentDescription = cdImportModelFab },
-      ) {
-        Icon(Icons.Filled.Add, contentDescription = null)
+      if (selectedPage == ModelManagerPage.INSTALLED) {
+        val cdImportModelFab = stringResource(R.string.cd_import_model_button)
+        SmallFloatingActionButton(
+          onClick = { showImportModelSheet = true },
+          containerColor = MaterialTheme.colorScheme.secondaryContainer,
+          contentColor = MaterialTheme.colorScheme.secondary,
+          modifier = Modifier.semantics { contentDescription = cdImportModelFab },
+        ) {
+          Icon(Icons.Filled.Add, contentDescription = null)
+        }
       }
     },
   ) { innerPadding ->
@@ -263,41 +323,83 @@ fun GlobalModelManager(
         contentPadding =
           PaddingValues(top = 16.dp, bottom = innerPadding.calculateBottomPadding() + 80.dp),
       ) {
-        items(builtInModels) { model ->
+        item(key = "model_manager_filters") {
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            PrimaryTabRow(selectedTabIndex = selectedPageIndex) {
+              Tab(
+                selected = selectedPage == ModelManagerPage.ONLINE,
+                onClick = { selectedPageIndex = ModelManagerPage.ONLINE.ordinal },
+                text = { Text(stringResource(R.string.duanyu_model_tab_online)) },
+              )
+              Tab(
+                selected = selectedPage == ModelManagerPage.INSTALLED,
+                onClick = { selectedPageIndex = ModelManagerPage.INSTALLED.ordinal },
+                text = { Text(stringResource(R.string.duanyu_model_tab_installed)) },
+              )
+            }
+            Row(
+              modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+              horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+              MODEL_CATEGORY_FILTERS.forEachIndexed { index, category ->
+                FilterChip(
+                  selected = selectedCategoryIndex == index,
+                  onClick = { selectedCategoryIndex = index },
+                  label = { Text(stringResource(category.labelRes)) },
+                )
+              }
+            }
+            if (selectedPage == ModelManagerPage.ONLINE) {
+              OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                placeholder = { Text(stringResource(R.string.duanyu_model_search_placeholder)) },
+                modifier = Modifier.fillMaxWidth(),
+              )
+            }
+          }
+        }
+
+        if (visibleModels.isEmpty()) {
+          item(key = "model_manager_empty") {
+            Text(
+              text =
+                stringResource(
+                  if (selectedPage == ModelManagerPage.ONLINE) {
+                    R.string.duanyu_model_empty_online
+                  } else {
+                    R.string.duanyu_model_empty_installed
+                  }
+                ),
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              style = MaterialTheme.typography.bodyMedium,
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 48.dp),
+            )
+          }
+        }
+        items(visibleModels, key = { "${selectedPage.name}_${it.name}" }) { model ->
           val expanded = modelItemExpandedStates.getOrDefault(model.name, true)
+          val variants =
+            modelVariants.getOrDefault(model.name, listOf()).let { variants ->
+              if (selectedPage == ModelManagerPage.INSTALLED) {
+                variants.filter(::isInstalled)
+              } else {
+                variants
+              }
+            }
           ModelItem(
             model = model,
-            modelVariants = modelVariants.getOrDefault(model.name, listOf()),
+            modelVariants = variants,
             task = null,
             modelManagerViewModel = viewModel,
             onModelClicked = handleClickModel,
             onBenchmarkClicked = onBenchmarkClicked,
             expanded = expanded,
+            showDeleteButton = selectedPage == ModelManagerPage.INSTALLED,
             showBenchmarkButton = false,
             onExpanded = { modelItemExpandedStates[model.name] = it },
-          )
-        }
-
-        // Imported models.
-        if (importedModels.isNotEmpty()) {
-          item(key = "imported_models_label") {
-            Text(
-              stringResource(R.string.model_list_imported_models_title),
-              color = MaterialTheme.colorScheme.onSurface,
-              style = MaterialTheme.typography.labelLarge,
-              modifier = Modifier.padding(horizontal = 16.dp).padding(top = 32.dp, bottom = 8.dp),
-            )
-          }
-        }
-        items(importedModels) { model ->
-          ModelItem(
-            model = model,
-            task = null,
-            modelManagerViewModel = viewModel,
-            onModelClicked = handleClickModel,
-            onBenchmarkClicked = onBenchmarkClicked,
-            expanded = true,
-            showBenchmarkButton = false,
           )
         }
       }

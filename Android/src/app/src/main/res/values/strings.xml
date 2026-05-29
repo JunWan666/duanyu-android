@@ -49,6 +49,12 @@
   <string name="duanyu_settings_subtitle">Models, API, language, theme</string>
   <string name="duanyu_model_manager_title">Model Manager</string>
   <string name="duanyu_model_manager_subtitle">Download, import, delete</string>
+  <string name="duanyu_model_tab_online">Online</string>
+  <string name="duanyu_model_tab_installed">Installed</string>
+  <string name="duanyu_model_filter_all">All</string>
+  <string name="duanyu_model_search_placeholder">Search online models</string>
+  <string name="duanyu_model_empty_online">No online models match the current filter.</string>
+  <string name="duanyu_model_empty_installed">No installed models in this category yet.</string>
   <string name="duanyu_api_service_title">API Service</string>
   <string name="duanyu_api_service_subtitle">OpenAI-compatible local interface</string>
   <string name="duanyu_api_service_detail">The local API service is planned for a later milestone. It will provide OpenAI-compatible endpoints for models, chat completions, audio transcription, and skills, and will stay off by default.</string>
