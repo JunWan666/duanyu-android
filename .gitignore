@@ -40,6 +40,7 @@ google-services.json
 build-output/
 build-output/apks/
 .jdk/
+LOCAL_NAS_UPLOAD_RULES.md
 
 # Logs and temp files
 *.log
