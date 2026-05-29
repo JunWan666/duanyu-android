@@ -34,15 +34,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.ai.edge.gallery.R
 import com.google.ai.edge.gallery.data.convertValueToTargetType
+import com.google.ai.edge.gallery.data.displayLabel
 import com.google.ai.edge.gallery.data.getConfigValueString
 import com.google.ai.edge.gallery.ui.theme.bodySmallNarrow
 import com.google.ai.edge.gallery.ui.theme.titleSmaller
@@ -62,12 +66,13 @@ private data class ConfigRowData(
  */
 @Composable
 fun MessageBodyConfigUpdate(message: ChatMessageConfigValuesChange) {
+  val context = LocalContext.current
   val density = LocalDensity.current
   val windowInfo = LocalWindowInfo.current
   val screenWidthDp = remember { with(density) { windowInfo.containerSize.width.toDp() } }
 
   val configRows =
-    remember(message) {
+    remember(message, context) {
       val oldValues = message.oldValues
       val newValues = message.newValues
       val commonKeys = oldValues.keys.intersect(newValues.keys)
@@ -89,7 +94,7 @@ fun MessageBodyConfigUpdate(message: ChatMessageConfigValuesChange) {
         val oldValueDisplay = getConfigValueString(oldValue, config)
         val newValueDisplay = getConfigValueString(newValue, config)
 
-        ConfigRowData(key, oldValueDisplay, newValueDisplay, isChanged)
+        ConfigRowData(config.key.displayLabel(context), oldValueDisplay, newValueDisplay, isChanged)
       }
     }
 
@@ -102,7 +107,7 @@ fun MessageBodyConfigUpdate(message: ChatMessageConfigValuesChange) {
       Column(modifier = Modifier.padding(8.dp)) {
         // Title.
         Text(
-          "Configs updated",
+          stringResource(R.string.configs_updated),
           color = MaterialTheme.colorScheme.onTertiaryContainer,
           style = titleSmaller,
         )

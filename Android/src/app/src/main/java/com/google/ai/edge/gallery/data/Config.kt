@@ -16,7 +16,9 @@
 
 package com.google.ai.edge.gallery.data
 
+import android.content.Context
 import androidx.annotation.StringRes
+import com.google.ai.edge.gallery.R
 import kotlin.math.abs
 
 /**
@@ -80,6 +82,43 @@ object ConfigKeys {
   val PREFILL_TOKENS = ConfigKey("prefill_tokens", "Prefill tokens")
   val DECODE_TOKENS = ConfigKey("decode_tokens", "Decode tokens")
   val NUMBER_OF_RUNS = ConfigKey("number_of_runs", "Number of runs")
+}
+
+fun ConfigKey.displayLabel(context: Context): String {
+  val labelRes =
+    when (id) {
+      ConfigKeys.MAX_TOKENS.id -> R.string.config_label_max_tokens
+      ConfigKeys.TOPK.id -> R.string.config_label_topk
+      ConfigKeys.TOPP.id -> R.string.config_label_topp
+      ConfigKeys.TEMPERATURE.id -> R.string.config_label_temperature
+      ConfigKeys.DEFAULT_MAX_TOKENS.id -> R.string.config_label_default_max_tokens
+      ConfigKeys.DEFAULT_TOPK.id -> R.string.config_label_default_topk
+      ConfigKeys.DEFAULT_TOPP.id -> R.string.config_label_default_topp
+      ConfigKeys.DEFAULT_TEMPERATURE.id -> R.string.config_label_default_temperature
+      ConfigKeys.SUPPORT_IMAGE.id -> R.string.config_label_support_image
+      ConfigKeys.SUPPORT_AUDIO.id -> R.string.config_label_support_audio
+      ConfigKeys.SUPPORT_TINY_GARDEN.id -> R.string.config_label_support_tiny_garden
+      ConfigKeys.SUPPORT_MOBILE_ACTIONS.id -> R.string.config_label_support_mobile_actions
+      ConfigKeys.SUPPORT_THINKING.id -> R.string.config_label_support_thinking
+      ConfigKeys.SUPPORT_SPECULATIVE_DECODING.id ->
+        R.string.config_label_support_speculative_decoding
+      ConfigKeys.ENABLE_THINKING.id -> R.string.config_label_enable_thinking
+      ConfigKeys.ENABLE_SPECULATIVE_DECODING.id ->
+        R.string.config_label_enable_speculative_decoding
+      ConfigKeys.ACCELERATOR.id -> R.string.config_label_accelerator
+      ConfigKeys.COMPATIBLE_ACCELERATORS.id -> R.string.config_label_compatible_accelerators
+      ConfigKeys.WARM_UP_ITERATIONS.id -> R.string.config_label_warm_up_iterations
+      ConfigKeys.BENCHMARK_ITERATIONS.id -> R.string.config_label_benchmark_iterations
+      ConfigKeys.NAME.id -> R.string.config_label_name
+      ConfigKeys.MODEL_TYPE.id -> R.string.config_label_model_type
+      ConfigKeys.RESET_CONVERSATION_TURN_COUNT.id ->
+        R.string.config_label_reset_conversation_turn_count
+      ConfigKeys.PREFILL_TOKENS.id -> R.string.config_label_prefill_tokens
+      ConfigKeys.DECODE_TOKENS.id -> R.string.config_label_decode_tokens
+      ConfigKeys.NUMBER_OF_RUNS.id -> R.string.config_label_number_of_runs
+      else -> null
+    }
+  return labelRes?.let(context::getString) ?: label
 }
 
 /**

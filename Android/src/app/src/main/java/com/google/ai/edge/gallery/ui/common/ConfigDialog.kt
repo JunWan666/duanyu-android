@@ -83,6 +83,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -101,6 +102,7 @@ import com.google.ai.edge.gallery.data.LabelConfig
 import com.google.ai.edge.gallery.data.NumberSliderConfig
 import com.google.ai.edge.gallery.data.SegmentedButtonConfig
 import com.google.ai.edge.gallery.data.ValueType
+import com.google.ai.edge.gallery.data.displayLabel
 import com.google.ai.edge.gallery.ui.theme.labelSmallNarrow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -252,7 +254,7 @@ fun ConfigDialog(
           ) {
             // Cancel button.
             if (showCancel) {
-              TextButton(onClick = { onDismissed() }) { Text("Cancel") }
+              TextButton(onClick = { onDismissed() }) { Text(stringResource(R.string.cancel)) }
             }
 
             // Ok button
@@ -308,9 +310,10 @@ fun ConfigEditorsPanel(configs: List<Config>, values: SnapshotStateMap<String, A
 
 @Composable
 fun LabelRow(config: LabelConfig, values: SnapshotStateMap<String, Any>) {
+  val context = LocalContext.current
   Column(modifier = Modifier.fillMaxWidth()) {
     // Field label.
-    Text(config.key.label, style = MaterialTheme.typography.titleSmall)
+    Text(config.key.displayLabel(context), style = MaterialTheme.typography.titleSmall)
     // Content label.
     val label =
       try {
@@ -352,12 +355,16 @@ fun getTextFieldDisplayValue(valueType: ValueType, value: Float): String {
 @Composable
 fun NumberSliderRow(config: NumberSliderConfig, values: SnapshotStateMap<String, Any>) {
   val focusManager = LocalFocusManager.current
+  val context = LocalContext.current
 
   Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
     // Field label.
     val minStr = getTextFieldDisplayValue(config.valueType, config.sliderMin)
     val maxStr = getTextFieldDisplayValue(config.valueType, config.sliderMax)
-    Text("${config.key.label} ($minStr-$maxStr)", style = MaterialTheme.typography.titleSmall)
+    Text(
+      "${config.key.displayLabel(context)} ($minStr-$maxStr)",
+      style = MaterialTheme.typography.titleSmall,
+    )
 
     // Controls row.
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -463,14 +470,15 @@ fun NumberSliderRow(config: NumberSliderConfig, values: SnapshotStateMap<String,
  */
 @Composable
 fun BooleanSwitchRow(config: BooleanSwitchConfig, values: SnapshotStateMap<String, Any>) {
+  val context = LocalContext.current
   val switchValue =
     try {
       values[config.key.label] as Boolean
     } catch (e: Exception) {
       false
-    }
+  }
   Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
-    Text(config.key.label, style = MaterialTheme.typography.titleSmall)
+    Text(config.key.displayLabel(context), style = MaterialTheme.typography.titleSmall)
     Switch(checked = switchValue, onCheckedChange = { values[config.key.label] = it })
   }
 }
@@ -483,6 +491,7 @@ fun BooleanSwitchRow(config: BooleanSwitchConfig, values: SnapshotStateMap<Strin
  */
 @Composable
 fun SegmentedButtonRow(config: SegmentedButtonConfig, values: SnapshotStateMap<String, Any>) {
+  val context = LocalContext.current
   val selectedOptions: List<String> = remember { (values[config.key.label] as String).split(",") }
   var selectionStates: List<Boolean> by remember {
     mutableStateOf(
@@ -491,7 +500,7 @@ fun SegmentedButtonRow(config: SegmentedButtonConfig, values: SnapshotStateMap<S
   }
 
   Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
-    Text(config.key.label, style = MaterialTheme.typography.titleSmall)
+    Text(config.key.displayLabel(context), style = MaterialTheme.typography.titleSmall)
     MultiChoiceSegmentedButtonRow {
       config.options.forEachIndexed { index, label ->
         SegmentedButton(
@@ -553,13 +562,14 @@ fun BottomSheetSelectorRow(
   var showBottomSheet by remember { mutableStateOf(false) }
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val scope = rememberCoroutineScope()
+  val context = LocalContext.current
 
   Column(
     modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
     verticalArrangement = Arrangement.spacedBy(4.dp),
   ) {
     if (showLabel) {
-      Text(config.key.label, style = MaterialTheme.typography.titleSmall)
+      Text(config.key.displayLabel(context), style = MaterialTheme.typography.titleSmall)
     }
     Row(
       horizontalArrangement = Arrangement.SpaceBetween,

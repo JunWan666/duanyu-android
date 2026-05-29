@@ -371,7 +371,7 @@ fun GlobalModelManager(
   if (showImportModelSheet) {
     ModalBottomSheet(onDismissRequest = { showImportModelSheet = false }, sheetState = sheetState) {
       Text(
-        "Import model",
+        stringResource(R.string.import_model),
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
       )
@@ -406,7 +406,10 @@ fun GlobalModelManager(
           modifier = Modifier.fillMaxWidth().padding(16.dp),
         ) {
           Icon(Icons.AutoMirrored.Outlined.NoteAdd, contentDescription = null)
-          Text("From local model file", modifier = Modifier.clearAndSetSemantics {})
+          Text(
+            stringResource(R.string.import_model_from_local_file),
+            modifier = Modifier.clearAndSetSemantics {},
+          )
         }
       }
     }
@@ -440,7 +443,9 @@ fun GlobalModelManager(
             showImportingDialog = false
 
             // Show a snack bar for successful import.
-            scope.launch { snackbarHostState.showSnackbar("Model imported successfully") }
+            scope.launch {
+              snackbarHostState.showSnackbar(context.getString(R.string.model_imported_successfully))
+            }
           },
         )
       }
@@ -458,8 +463,8 @@ fun GlobalModelManager(
         )
       },
       onDismissRequest = { showUnsupportedFileTypeDialog = false },
-      title = { Text("Unsupported file type") },
-      text = { Text("Only \".task\" or \".litertlm\" file type is supported.") },
+      title = { Text(stringResource(R.string.unsupported_file_type_title)) },
+      text = { Text(stringResource(R.string.unsupported_file_type_content)) },
       confirmButton = {
         Button(onClick = { showUnsupportedFileTypeDialog = false }) {
           Text(stringResource(R.string.ok))
@@ -479,8 +484,8 @@ fun GlobalModelManager(
         )
       },
       onDismissRequest = { showUnsupportedWebModelDialog = false },
-      title = { Text("Unsupported model type") },
-      text = { Text("Looks like the model is a web-only model and is not supported by the app.") },
+      title = { Text(stringResource(R.string.unsupported_model_type_title)) },
+      text = { Text(stringResource(R.string.unsupported_model_type_content)) },
       confirmButton = {
         Button(onClick = { showUnsupportedWebModelDialog = false }) {
           Text(stringResource(R.string.ok))

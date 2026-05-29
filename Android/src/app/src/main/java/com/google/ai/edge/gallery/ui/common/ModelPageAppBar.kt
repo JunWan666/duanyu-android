@@ -215,7 +215,7 @@ fun ModelPageAppBar(
       modelConfigs.removeIf { it.key == ConfigKeys.ENABLE_SPECULATIVE_DECODING }
     }
     ConfigDialog(
-      title = "Configurations",
+      title = stringResource(R.string.configurations_title),
       configs = modelConfigs,
       initialValues = model.configValues,
       onDismissed = { showConfigDialog = false },

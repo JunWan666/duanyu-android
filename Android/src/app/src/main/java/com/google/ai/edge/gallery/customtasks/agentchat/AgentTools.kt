@@ -23,6 +23,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import com.google.ai.edge.gallery.GalleryEvent
+import com.google.ai.edge.gallery.R
 import com.google.ai.edge.gallery.common.AgentAction
 import com.google.ai.edge.gallery.common.AskInfoAgentAction
 import com.google.ai.edge.gallery.common.AskMcpToolCallPermissionAction
@@ -61,6 +62,10 @@ open class AgentTools() : ToolSet {
   var resultImageToShow: CallJsSkillResultImage? = null
   var resultWebviewToShow: CallJsSkillResultWebview? = null
 
+  private fun text(resId: Int, vararg args: Any): String {
+    return context.getString(resId, *args)
+  }
+
   /** Loads skill. */
   @Tool(description = "Loads a skill.")
   fun loadSkill(
@@ -79,17 +84,17 @@ open class AgentTools() : ToolSet {
       if (skill != null) {
         _actionChannel.send(
           SkillProgressAgentAction(
-            label = "Loading skill \"$skillName\"",
+            label = text(R.string.agent_progress_loading_skill, skillName),
             inProgress = true,
-            addItemTitle = "Load \"${skill.name}\"",
-            addItemDescription = "Description: ${skill.description}",
+            addItemTitle = text(R.string.agent_progress_load_skill_title, skill.name),
+            addItemDescription = text(R.string.agent_progress_description, skill.description),
             customData = skill,
           )
         )
       } else {
         _actionChannel.send(
           SkillProgressAgentAction(
-            label = "Failed to load skill \"$skillName\"",
+            label = text(R.string.agent_progress_failed_load_skill, skillName),
             inProgress = false,
           )
         )
@@ -136,7 +141,7 @@ open class AgentTools() : ToolSet {
         if (permissionResult == PermissionResult.DENY) {
           _actionChannel.send(
             SkillProgressAgentAction(
-              label = "Permission denied for MCP tool \"$toolName\"",
+              label = text(R.string.agent_progress_mcp_permission_denied, toolName),
               inProgress = false,
             )
           )
@@ -148,10 +153,10 @@ open class AgentTools() : ToolSet {
       try {
         _actionChannel.send(
           SkillProgressAgentAction(
-            label = "Calling MCP tool \"$toolName\"",
+            label = text(R.string.agent_progress_calling_mcp, toolName),
             inProgress = true,
-            addItemTitle = "Call MCP tool: \"$toolName\"",
-            addItemDescription = "- Input: $input",
+            addItemTitle = text(R.string.agent_progress_call_mcp_title, toolName),
+            addItemDescription = "- ${text(R.string.agent_progress_input, input)}",
           )
         )
         val result =
@@ -168,7 +173,7 @@ open class AgentTools() : ToolSet {
           Log.d(TAG, "Tool execution returned null result")
           _actionChannel.send(
             SkillProgressAgentAction(
-              label = "Failed to call MCP tool \"$toolName\"",
+              label = text(R.string.agent_progress_failed_call_mcp, toolName),
               inProgress = false,
             )
           )
@@ -182,8 +187,8 @@ open class AgentTools() : ToolSet {
           Log.e(TAG, "MCP tool \"$toolName\" failed: $errorText")
           _actionChannel.send(
             SkillProgressAgentAction(
-              label = "Failed to call MCP tool \"$toolName\"",
-              addItemTitle = "Call MCP tool \"$toolName\" failed",
+              label = text(R.string.agent_progress_failed_call_mcp, toolName),
+              addItemTitle = text(R.string.agent_progress_call_mcp_failed_title, toolName),
               addItemDescription = errorText,
               inProgress = false,
             )
@@ -196,9 +201,9 @@ open class AgentTools() : ToolSet {
           Log.d(TAG, "MCP tool \"$toolName\" succeeded:\n$successText")
           _actionChannel.send(
             SkillProgressAgentAction(
-              label = "Succeeded calling MCP tool \"$toolName\"",
+              label = text(R.string.agent_progress_call_mcp_succeeded, toolName),
               inProgress = true,
-              addItemTitle = "Call MCP tool \"$toolName\" succeeded",
+              addItemTitle = text(R.string.agent_progress_call_mcp_succeeded_title, toolName),
               addItemDescription = successText,
             )
           )
@@ -209,10 +214,10 @@ open class AgentTools() : ToolSet {
         Log.e(TAG, "Error calling MCP tool", e)
         _actionChannel.send(
           SkillProgressAgentAction(
-            label = "Error calling MCP tool \"$toolName\"",
+            label = text(R.string.agent_progress_error_calling_mcp, toolName),
             inProgress = false,
-            addItemTitle = "Call MCP tool \"$toolName\" failed",
-            addItemDescription = e.message ?: "Unknown error",
+            addItemTitle = text(R.string.agent_progress_call_mcp_failed_title, toolName),
+            addItemDescription = e.message ?: text(R.string.duanyu_unknown),
           )
         )
         logMcpExecution(success = false, errorType = "exception")
@@ -245,7 +250,7 @@ open class AgentTools() : ToolSet {
       if (skill == null) {
         _actionChannel.send(
           SkillProgressAgentAction(
-            label = "Failed to call skill \"$scriptName\"",
+            label = text(R.string.agent_progress_failed_call_skill, scriptName),
             inProgress = false,
           )
         )
@@ -265,10 +270,10 @@ open class AgentTools() : ToolSet {
         if (savedSecret == null || savedSecret.isEmpty()) {
           val action =
             AskInfoAgentAction(
-              dialogTitle = "Enter secret",
+              dialogTitle = text(R.string.agent_progress_enter_secret),
               fieldLabel =
                 skill.requireSecretDescription.ifEmpty {
-                  "The JS script needs a secret (API key / token) to proceed:"
+                  text(R.string.agent_progress_js_secret_prompt)
                 },
             )
           _actionChannel.send(action)
@@ -298,10 +303,11 @@ open class AgentTools() : ToolSet {
       // Update progress.
       _actionChannel.send(
         SkillProgressAgentAction(
-          label = "Calling JS script \"${skillName}/${scriptName}\"",
+          label = text(R.string.agent_progress_calling_js, skillName, scriptName),
           inProgress = true,
-          addItemTitle = "Call JS script: \"${skillName}/${scriptName}\"",
-          addItemDescription = "- URL: ${url.replace(LOCAL_URL_BASE, "")}\n- Data: $data",
+          addItemTitle = text(R.string.agent_progress_call_js_title, skillName, scriptName),
+          addItemDescription =
+            text(R.string.agent_progress_url_data, url.replace(LOCAL_URL_BASE, ""), data),
           customData = skill,
         )
       )
@@ -374,10 +380,10 @@ open class AgentTools() : ToolSet {
       Log.d(TAG, "Run intent. Intent: '$intent', parameters: '$parameters'")
       _actionChannel.send(
         SkillProgressAgentAction(
-          label = "Executing intent \"$intent\"",
+          label = text(R.string.agent_progress_executing_intent, intent),
           inProgress = true,
-          addItemTitle = "Execute intent \"$intent\"",
-          addItemDescription = "Parameters: $parameters",
+          addItemTitle = text(R.string.agent_progress_execute_intent_title, intent),
+          addItemDescription = text(R.string.agent_progress_parameters, parameters),
         )
       )
       val res =

@@ -200,6 +200,51 @@
   <string name="model_manager_select_task_title">Select a use case to try</string>
   <string name="model_not_downloaded_msg">Model not downloaded yet</string>
   <string name="download_and_try">Download &amp; Try it</string>
+  <string name="import_model">Import model</string>
+  <string name="import_model_from_local_file">From local model file</string>
+  <string name="model_imported_successfully">Model imported successfully</string>
+  <string name="unsupported_file_type_title">Unsupported file type</string>
+  <string name="unsupported_file_type_content">Only \".task\" or \".litertlm\" file type is supported.</string>
+  <string name="unsupported_model_type_title">Unsupported model type</string>
+  <string name="unsupported_model_type_content">Looks like the model is a web-only model and is not supported by the app.</string>
+  <string name="configurations_title">Configurations</string>
+  <string name="benchmark_configs_title">Benchmark configs</string>
+  <string name="start">Start</string>
+  <string name="configs_updated">Configs updated</string>
+  <string name="config_label_max_tokens">Max tokens</string>
+  <string name="config_label_topk">TopK</string>
+  <string name="config_label_topp">TopP</string>
+  <string name="config_label_temperature">Temperature</string>
+  <string name="config_label_default_max_tokens">Default max tokens</string>
+  <string name="config_label_default_topk">Default TopK</string>
+  <string name="config_label_default_topp">Default TopP</string>
+  <string name="config_label_default_temperature">Default temperature</string>
+  <string name="config_label_support_image">Support image</string>
+  <string name="config_label_support_audio">Support audio</string>
+  <string name="config_label_support_tiny_garden">Support tiny garden</string>
+  <string name="config_label_support_mobile_actions">Support mobile actions</string>
+  <string name="config_label_support_thinking">Support thinking</string>
+  <string name="config_label_support_speculative_decoding">Support speculative decoding</string>
+  <string name="config_label_enable_thinking">Enable thinking</string>
+  <string name="config_label_enable_speculative_decoding">Enable speculative decoding</string>
+  <string name="config_label_accelerator">Accelerator</string>
+  <string name="config_label_compatible_accelerators">Compatible accelerators</string>
+  <string name="config_label_warm_up_iterations">Warm up iterations</string>
+  <string name="config_label_benchmark_iterations">Benchmark iterations</string>
+  <string name="config_label_name">Name</string>
+  <string name="config_label_model_type">Model type</string>
+  <string name="config_label_reset_conversation_turn_count">Number of turns before the conversation resets</string>
+  <string name="config_label_prefill_tokens">Prefill tokens</string>
+  <string name="config_label_decode_tokens">Decode tokens</string>
+  <string name="config_label_number_of_runs">Number of runs</string>
+  <string name="acknowledge_user_agreement_title">Acknowledge user agreement</string>
+  <string name="acknowledge_user_agreement_content">This is a gated model. Please click the button below to view and agree to the user agreement. After accepting, simply close that tab to proceed with the model download.</string>
+  <string name="open_user_agreement">Open user agreement</string>
+  <string name="unknown_network_error_title">Unknown network error</string>
+  <string name="unknown_network_error_content">Please check your internet connection.</string>
+  <string name="promo_gemma4_title">Gemma 4: now available</string>
+  <string name="promo_gemma4_content">Built from the same world-class technology as Gemini 3, Gemma 4 brings frontier intelligence to your mobile and edge devices.</string>
+  <string name="read_more">Read more</string>
   <string name="name" translatable="false">Name</string>
   <string name="no_cutouts_collected" translatable="false">No cutouts collected</string>
   <string name="notification_content_fail" translatable="false">模型 \"%s\" 下载失败</string>
@@ -398,6 +443,28 @@
   <string name="skill_tester_custom_data" translatable="false">Custom Data</string>
   <string name="skill_tester_result" translatable="false">Result</string>
   <string name="skill_tester_logs" translatable="false">Logs</string>
+  <string name="agent_progress_loading_skill" translatable="false">Loading skill \"%1$s\"</string>
+  <string name="agent_progress_load_skill_title" translatable="false">Load \"%1$s\"</string>
+  <string name="agent_progress_description" translatable="false">Description: %1$s</string>
+  <string name="agent_progress_failed_load_skill" translatable="false">Failed to load skill \"%1$s\"</string>
+  <string name="agent_progress_mcp_permission_denied" translatable="false">Permission denied for MCP tool \"%1$s\"</string>
+  <string name="agent_progress_calling_mcp" translatable="false">Calling MCP tool \"%1$s\"</string>
+  <string name="agent_progress_call_mcp_title" translatable="false">Call MCP tool: \"%1$s\"</string>
+  <string name="agent_progress_input" translatable="false">Input: %1$s</string>
+  <string name="agent_progress_failed_call_mcp" translatable="false">Failed to call MCP tool \"%1$s\"</string>
+  <string name="agent_progress_call_mcp_failed_title" translatable="false">Call MCP tool \"%1$s\" failed</string>
+  <string name="agent_progress_call_mcp_succeeded" translatable="false">Succeeded calling MCP tool \"%1$s\"</string>
+  <string name="agent_progress_call_mcp_succeeded_title" translatable="false">Call MCP tool \"%1$s\" succeeded</string>
+  <string name="agent_progress_error_calling_mcp" translatable="false">Error calling MCP tool \"%1$s\"</string>
+  <string name="agent_progress_failed_call_skill" translatable="false">Failed to call skill \"%1$s\"</string>
+  <string name="agent_progress_enter_secret" translatable="false">Enter secret</string>
+  <string name="agent_progress_js_secret_prompt" translatable="false">The JS script needs a secret (API key / token) to proceed:</string>
+  <string name="agent_progress_calling_js" translatable="false">Calling JS script \"%1$s/%2$s\"</string>
+  <string name="agent_progress_call_js_title" translatable="false">Call JS script: \"%1$s/%2$s\"</string>
+  <string name="agent_progress_url_data" translatable="false">URL: %1$s\nData: %2$s</string>
+  <string name="agent_progress_executing_intent" translatable="false">Executing intent \"%1$s\"</string>
+  <string name="agent_progress_execute_intent_title" translatable="false">Execute intent \"%1$s\"</string>
+  <string name="agent_progress_parameters" translatable="false">Parameters: %1$s</string>
 
   <!-- Strings for MCP -->
   <string name="mcp" translatable="false">MCP</string>
