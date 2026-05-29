@@ -13,7 +13,7 @@
   <p>
     <img src="https://img.shields.io/badge/i18n-中文%20%2F%20English-1F7A55?style=for-the-badge" alt="i18n 中文 English" />
     <img src="https://img.shields.io/badge/Agent-Skills-2454A6?style=for-the-badge" alt="Agent Skills" />
-    <img src="https://img.shields.io/badge/Status-PRD阶段-F5A623?style=for-the-badge" alt="PRD Stage" />
+    <img src="https://img.shields.io/badge/Status-改造中-F5A623?style=for-the-badge" alt="Development Status" />
   </p>
 </div>
 
@@ -23,7 +23,7 @@
 
 **端语** 是中文品牌名，英文名建议使用 **DuanYu**。这里不做直译，而是保留中文品牌的音译，读起来也更像一个独立产品名。
 
-本仓库是从 Google AI Edge Gallery 技术底座整理出的新 Android 项目。当前阶段重点是产品需求、UI 方向、品牌素材和后续改造路线。
+本仓库是从 Google AI Edge Gallery 技术底座整理出的新 Android 项目。当前阶段已进入端语 App 改造：应用标识、五入口主界面、设置页、语言切换和目标功能范围收口已经落地。
 
 已经包含：
 

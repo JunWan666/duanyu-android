@@ -386,14 +386,20 @@ fun GalleryNavHost(
         val taskId = data.pathSegments.get(data.pathSegments.size - 2)
         val modelName = data.pathSegments.last()
         val queryStr = data.getQueryParameter("query")
-        modelManagerViewModel.getModelByName(name = modelName)?.let { model ->
-          val route =
-            if (!queryStr.isNullOrEmpty()) {
-              "$ROUTE_MODEL/${taskId}/${model.name}?query=${Uri.encode(queryStr)}"
-            } else {
-              "$ROUTE_MODEL/${taskId}/${model.name}"
-            }
-          navController.navigate(route)
+        val linkedTask =
+          modelManagerUiState.tasks.find { task ->
+            task.id == taskId && task.models.any { model -> model.name == modelName }
+          }
+        linkedTask?.let { task ->
+          task.models.find { it.name == modelName }?.let { model ->
+            val route =
+              if (!queryStr.isNullOrEmpty()) {
+                "$ROUTE_MODEL/${task.id}/${model.name}?query=${Uri.encode(queryStr)}"
+              } else {
+                "$ROUTE_MODEL/${task.id}/${model.name}"
+              }
+            navController.navigate(route)
+          }
         }
       } else {
         Log.e(TAG, "Malformed deep link URI received: $data")
