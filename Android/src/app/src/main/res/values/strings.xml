@@ -15,7 +15,6 @@
 -->
 
 <resources>
-  <!-- TODO(jingjin): Add translation support when i18n is ready. -->
   <string name="duanyu_tab_chat">Chat</string>
   <string name="duanyu_tab_image">Image</string>
   <string name="duanyu_tab_audio">Audio</string>
@@ -38,13 +37,31 @@
   <string name="duanyu_select_model_start">Select model and start</string>
   <string name="duanyu_current_entry">Current entry</string>
   <string name="duanyu_settings_title">Settings</string>
-  <string name="duanyu_settings_subtitle">Models, notifications, theme</string>
+  <string name="duanyu_settings_subtitle">Models, API, language, theme</string>
   <string name="duanyu_model_manager_title">Model Manager</string>
   <string name="duanyu_model_manager_subtitle">Download, import, delete</string>
+  <string name="duanyu_api_service_title">API Service</string>
+  <string name="duanyu_api_service_subtitle">OpenAI-compatible local interface</string>
+  <string name="duanyu_status_planned">Planned</string>
   <string name="duanyu_notifications_title">Notifications</string>
   <string name="duanyu_notifications_subtitle">Scheduled reminders and task notifications</string>
+  <string name="duanyu_language_settings_title">Language</string>
+  <string name="duanyu_language_settings_subtitle">Switch between system, Chinese, and English</string>
+  <string name="duanyu_language_system">System</string>
+  <string name="duanyu_language_zh_cn">中文</string>
+  <string name="duanyu_language_en">English</string>
   <string name="duanyu_theme_settings_title">Theme</string>
   <string name="duanyu_theme_settings_subtitle">Light, dark, system default</string>
+  <string name="duanyu_theme_auto">Auto</string>
+  <string name="duanyu_theme_light">Light</string>
+  <string name="duanyu_theme_dark">Dark</string>
+  <string name="duanyu_terms_title">Terms and Privacy</string>
+  <string name="duanyu_terms_subtitle">View DuanYu usage notes</string>
+  <string name="duanyu_licenses_title">Open Source Licenses</string>
+  <string name="duanyu_licenses_subtitle">Third-party libraries used by the app</string>
+  <string name="duanyu_about_title">About DuanYu</string>
+  <string name="duanyu_about_subtitle">Version %1$s (%2$d)</string>
+  <string name="duanyu_unknown">Unknown</string>
   <string name="duanyu_loading_model_list">Loading model list</string>
   <string name="about_this_update" translatable="false">About this update</string>
   <string name="all" translatable="false">All</string>
@@ -77,7 +94,7 @@
   <string name="benchmark_tokens_limit_message" translatable="false">Ensure that the sum of prefill and decode tokens remains under the model\'s maximum token limit (%d vs %d)</string>
   <string name="best_overall" translatable="false">Best overall</string>
   <string name="model_list_experimental_label" translatable="false">EXPERIMENTAL</string>
-  <string name="cancel" translatable="false">Cancel</string>
+  <string name="cancel">Cancel</string>
   <string name="category_unlabeled" translatable="false">Unlabeled</string>
   <string name="category_llm" translatable="false">LLM</string>
   <string name="category_agents" translatable="false">Agents</string>
@@ -88,7 +105,7 @@
   <string name="chat_llm_agent_name" translatable="false">LLM</string>
   <string name="show_thinking" translatable="false">Show thinking</string>
   <string name="checking_access" translatable="false">Checking access...</string>
-  <string name="close" translatable="false">Close</string>
+  <string name="close">Close</string>
   <string name="collapse_all" translatable="false">Collapse all</string>
   <string name="discard" translatable="false">Discard</string>
   <string name="discard_changes_dialog_title" translatable="false">Discard changes?</string>
@@ -217,9 +234,10 @@
   <string name="test" translatable="false">Test</string>
   <string name="text_image_generation_text_field_placeholder" translatable="false">Type prompt…</string>
   <string name="text_input_placeholder_llm_chat" translatable="false">Type prompt…</string>
-  <string name="tos_dialog_title_app" translatable="false">欢迎使用端语</string>
+  <string name="tos_dialog_title_app">Welcome to DuanYu</string>
   <string name="tos_dialog_title_gemma" translatable="false">Gemma Terms of Use</string>
-  <string name="tos_dialog_accept_and_continue_button_label" translatable="false">Accept &amp; continue</string>
+  <string name="tos_dialog_content_app">DuanYu runs local AI capabilities on your device for chat, image Q&amp;A, audio transcription, agent skills, notifications, and theme settings.\n\nYou are responsible for the models, files, prompts, skills, and API access that you import, enable, or share. Imported models and third-party skills may have their own licenses, safety limits, and privacy practices.\n\nWhen the local API service is enabled in a future version, keep it limited to trusted devices and networks. Do not expose private models, tokens, files, or personal data to untrusted clients.</string>
+  <string name="tos_dialog_accept_and_continue_button_label">Accept &amp; continue</string>
   <string name="tos_dialog_agree_and_continue_button_label" translatable="false">Agree &amp; continue</string>
   <string name="try_it" translatable="false">Try it</string>
   <string name="turn_on_all" translatable="false">Turn on all</string>

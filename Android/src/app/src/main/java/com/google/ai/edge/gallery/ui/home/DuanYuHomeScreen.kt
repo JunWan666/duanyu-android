@@ -17,6 +17,11 @@
 package com.google.ai.edge.gallery.ui.home
 
 import android.Manifest
+import android.app.Activity
+import android.app.UiModeManager
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,14 +45,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ListAlt
+import androidx.compose.material.icons.outlined.Api
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Mms
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -57,8 +68,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -84,19 +98,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import com.google.ai.edge.gallery.BuildConfig
 import com.google.ai.edge.gallery.R
 import com.google.ai.edge.gallery.data.BuiltInTaskId
 import com.google.ai.edge.gallery.data.ModelDownloadStatusType
 import com.google.ai.edge.gallery.data.Task
+import com.google.ai.edge.gallery.i18n.DuanYuLanguage
+import com.google.ai.edge.gallery.i18n.DuanYuLocaleManager
+import com.google.ai.edge.gallery.proto.Theme
 import com.google.ai.edge.gallery.ui.common.TaskIcon
 import com.google.ai.edge.gallery.ui.common.tos.AppTosDialog
 import com.google.ai.edge.gallery.ui.common.tos.TosViewModel
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerUiState
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
+import com.google.ai.edge.gallery.ui.theme.ThemeSettings
 import com.google.ai.edge.gallery.ui.theme.customColors
 import kotlinx.coroutines.delay
 
 private const val NOTIFICATION_PERMISSION_DELAY_MS = 1200L
+private val THEME_OPTIONS = listOf(Theme.THEME_AUTO, Theme.THEME_LIGHT, Theme.THEME_DARK)
+private val LANGUAGE_OPTIONS =
+  listOf(DuanYuLanguage.SYSTEM, DuanYuLanguage.ZH_CN, DuanYuLanguage.EN)
 
 private data class DuanYuHomeTab(
   @param:StringRes val labelRes: Int,
@@ -158,7 +181,6 @@ fun DuanYuHomeScreen(
   val uiState by modelManagerViewModel.uiState.collectAsState()
   val context = LocalContext.current
   var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-  var showSettingsDialog by remember { mutableStateOf(false) }
   var showTosDialog by remember { mutableStateOf(!tosViewModel.getIsTosAccepted()) }
   var loadingModelAllowlistDelayed by remember { mutableStateOf(false) }
 
@@ -205,7 +227,7 @@ fun DuanYuHomeScreen(
             }
           },
           actions = {
-            IconButton(onClick = { showSettingsDialog = true }) {
+            IconButton(onClick = { selectedTabIndex = HomeTabs.lastIndex }) {
               Icon(
                 imageVector = Icons.Outlined.Settings,
                 contentDescription = stringResource(R.string.cd_app_settings_icon),
@@ -244,9 +266,10 @@ fun DuanYuHomeScreen(
           selectedTabIndex == HomeTabs.lastIndex -> {
             DuanYuSettingsPage(
               uiState = uiState,
+              currentTheme = modelManagerViewModel.readThemeOverride(),
+              modelManagerViewModel = modelManagerViewModel,
               onModelsClicked = onModelsClicked,
               onNotificationsClicked = onNotificationsClicked,
-              onThemeClicked = { showSettingsDialog = true },
             )
           }
           else -> {
@@ -270,14 +293,6 @@ fun DuanYuHomeScreen(
         showTosDialog = false
         tosViewModel.acceptTos()
       }
-    )
-  }
-
-  if (showSettingsDialog) {
-    SettingsDialog(
-      curThemeOverride = modelManagerViewModel.readThemeOverride(),
-      modelManagerViewModel = modelManagerViewModel,
-      onDismissed = { showSettingsDialog = false },
     )
   }
 
@@ -448,13 +463,18 @@ private fun DuanYuTaskPage(
 @Composable
 private fun DuanYuSettingsPage(
   uiState: ModelManagerUiState,
+  currentTheme: Theme,
+  modelManagerViewModel: ModelManagerViewModel,
   onModelsClicked: () -> Unit,
   onNotificationsClicked: () -> Unit,
-  onThemeClicked: () -> Unit,
 ) {
+  val context = LocalContext.current
   val totalModels = uiState.tasks.flatMap { it.models }.distinctBy { it.name }.size
   val downloadedModels =
     uiState.modelDownloadStatus.values.count { it.status == ModelDownloadStatusType.SUCCEEDED }
+  var selectedTheme by remember(currentTheme) { mutableStateOf(currentTheme) }
+  var selectedLanguage by remember { mutableStateOf(DuanYuLocaleManager.readLanguage(context)) }
+  var showTermsDialog by remember { mutableStateOf(false) }
 
   Column(
     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -498,20 +518,102 @@ private fun DuanYuSettingsPage(
         )
         HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
         DuanYuSettingsRow(
+          icon = Icons.Outlined.Api,
+          title = stringResource(R.string.duanyu_api_service_title),
+          subtitle = stringResource(R.string.duanyu_api_service_subtitle),
+          enabled = false,
+          trailingText = stringResource(R.string.duanyu_status_planned),
+          onClick = {},
+        )
+        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+        DuanYuSettingsRow(
           icon = Icons.Rounded.Notifications,
           title = stringResource(R.string.duanyu_notifications_title),
           subtitle = stringResource(R.string.duanyu_notifications_subtitle),
           onClick = onNotificationsClicked,
         )
+      }
+    }
+
+    DuanYuSettingsSection(
+      title = stringResource(R.string.duanyu_language_settings_title),
+      subtitle = stringResource(R.string.duanyu_language_settings_subtitle),
+      icon = Icons.Outlined.Language,
+    ) {
+      MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        LANGUAGE_OPTIONS.forEachIndexed { index, language ->
+          SegmentedButton(
+            shape = SegmentedButtonDefaults.itemShape(index = index, count = LANGUAGE_OPTIONS.size),
+            onCheckedChange = {
+              if (selectedLanguage != language) {
+                selectedLanguage = language
+                DuanYuLocaleManager.saveLanguage(context, language)
+                context.findActivity()?.recreate()
+              }
+            },
+            checked = language == selectedLanguage,
+            label = { Text(languageLabel(language)) },
+          )
+        }
+      }
+    }
+
+    DuanYuSettingsSection(
+      title = stringResource(R.string.duanyu_theme_settings_title),
+      subtitle = stringResource(R.string.duanyu_theme_settings_subtitle),
+      icon = Icons.Outlined.Palette,
+    ) {
+      MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        THEME_OPTIONS.forEachIndexed { index, theme ->
+          SegmentedButton(
+            shape = SegmentedButtonDefaults.itemShape(index = index, count = THEME_OPTIONS.size),
+            onCheckedChange = {
+              selectedTheme = theme
+              ThemeSettings.themeOverride.value = theme
+              modelManagerViewModel.saveThemeOverride(theme)
+              context.updateNightMode(theme)
+            },
+            checked = theme == selectedTheme,
+            label = { Text(themeLabel(theme)) },
+          )
+        }
+      }
+    }
+
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        DuanYuSettingsRow(
+          icon = Icons.Outlined.Security,
+          title = stringResource(R.string.duanyu_terms_title),
+          subtitle = stringResource(R.string.duanyu_terms_subtitle),
+          onClick = { showTermsDialog = true },
+        )
         HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
         DuanYuSettingsRow(
-          icon = Icons.Outlined.Settings,
-          title = stringResource(R.string.duanyu_theme_settings_title),
-          subtitle = stringResource(R.string.duanyu_theme_settings_subtitle),
-          onClick = onThemeClicked,
+          icon = Icons.AutoMirrored.Rounded.ListAlt,
+          title = stringResource(R.string.duanyu_licenses_title),
+          subtitle = stringResource(R.string.duanyu_licenses_subtitle),
+          onClick = { context.startActivity(Intent(context, OssLicensesMenuActivity::class.java)) },
+        )
+        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+        DuanYuSettingsRow(
+          icon = Icons.Outlined.Info,
+          title = stringResource(R.string.duanyu_about_title),
+          subtitle =
+            stringResource(
+              R.string.duanyu_about_subtitle,
+              BuildConfig.VERSION_NAME,
+              BuildConfig.VERSION_CODE,
+            ),
+          trailingIcon = Icons.Rounded.Verified,
+          onClick = {},
         )
       }
     }
+  }
+
+  if (showTermsDialog) {
+    AppTosDialog(onTosAccepted = { showTermsDialog = false }, viewingMode = true)
   }
 }
 
@@ -520,18 +622,31 @@ private fun DuanYuSettingsRow(
   icon: ImageVector,
   title: String,
   subtitle: String,
+  enabled: Boolean = true,
+  trailingText: String? = null,
+  trailingIcon: ImageVector? = null,
   onClick: () -> Unit,
 ) {
   Row(
-    modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(18.dp),
+    modifier =
+      Modifier.fillMaxWidth()
+        .clickable(enabled = enabled, onClick = onClick)
+        .padding(18.dp),
     horizontalArrangement = Arrangement.spacedBy(14.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
-    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+    Surface(
+      shape = RoundedCornerShape(8.dp),
+      color =
+        if (enabled) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surfaceContainerHighest,
+    ) {
       Icon(
         imageVector = icon,
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+        tint =
+          if (enabled) MaterialTheme.colorScheme.onPrimaryContainer
+          else MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(10.dp).size(22.dp),
       )
     }
@@ -544,6 +659,55 @@ private fun DuanYuSettingsRow(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
+    }
+    if (trailingText != null) {
+      Text(
+        trailingText,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    } else if (trailingIcon != null) {
+      Icon(
+        imageVector = trailingIcon,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary,
+      )
+    }
+  }
+}
+
+@Composable
+private fun DuanYuSettingsSection(
+  title: String,
+  subtitle: String,
+  icon: ImageVector,
+  content: @Composable () -> Unit,
+) {
+  Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+    Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
+      Row(
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+          Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.padding(10.dp).size(22.dp),
+          )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+          Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+          Text(
+            subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+      }
+      Spacer(modifier = Modifier.height(14.dp))
+      content()
     }
   }
 }
@@ -577,4 +741,44 @@ private fun DuanYuLoadingState(modifier: Modifier = Modifier) {
     CircularProgressIndicator(strokeWidth = 3.dp, modifier = Modifier.size(20.dp))
     Text(stringResource(R.string.duanyu_loading_model_list), style = MaterialTheme.typography.bodyMedium)
   }
+}
+
+@Composable
+private fun themeLabel(theme: Theme): String {
+  return when (theme) {
+    Theme.THEME_AUTO -> stringResource(R.string.duanyu_theme_auto)
+    Theme.THEME_LIGHT -> stringResource(R.string.duanyu_theme_light)
+    Theme.THEME_DARK -> stringResource(R.string.duanyu_theme_dark)
+    else -> stringResource(R.string.duanyu_unknown)
+  }
+}
+
+@Composable
+private fun languageLabel(language: DuanYuLanguage): String {
+  return when (language) {
+    DuanYuLanguage.SYSTEM -> stringResource(R.string.duanyu_language_system)
+    DuanYuLanguage.ZH_CN -> stringResource(R.string.duanyu_language_zh_cn)
+    DuanYuLanguage.EN -> stringResource(R.string.duanyu_language_en)
+  }
+}
+
+private fun Context.updateNightMode(theme: Theme) {
+  val uiModeManager = applicationContext.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+  when (theme) {
+    Theme.THEME_AUTO -> uiModeManager.setApplicationNightMode(UiModeManager.MODE_NIGHT_AUTO)
+    Theme.THEME_LIGHT -> uiModeManager.setApplicationNightMode(UiModeManager.MODE_NIGHT_NO)
+    Theme.THEME_DARK -> uiModeManager.setApplicationNightMode(UiModeManager.MODE_NIGHT_YES)
+    else -> uiModeManager.setApplicationNightMode(UiModeManager.MODE_NIGHT_AUTO)
+  }
+}
+
+private fun Context.findActivity(): Activity? {
+  var context = this
+  while (context is ContextWrapper) {
+    if (context is Activity) {
+      return context
+    }
+    context = context.baseContext
+  }
+  return null
 }
