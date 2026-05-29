@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_intro">本地 AI 对话、图片问答、音频转写与技能自动化</string>
+  <string name="app_name">端语</string>
+  <string name="app_name_first_part">端语</string>
+  <string name="duanyu_tab_chat">对话</string>
+  <string name="duanyu_tab_image">图片</string>
+  <string name="duanyu_tab_audio">音频</string>
+  <string name="duanyu_tab_skills">技能</string>
+  <string name="duanyu_tab_settings">设置</string>
+  <string name="duanyu_feature_ai_chat">AI Chat</string>
+  <string name="duanyu_feature_ask_image">Ask Image</string>
+  <string name="duanyu_feature_ask_audio">Ask Audio</string>
+  <string name="duanyu_feature_agent_skills">Agent Skills</string>
+  <string name="duanyu_tab_chat_subtitle">连续对话</string>
+  <string name="duanyu_tab_image_subtitle">图片问答</string>
+  <string name="duanyu_tab_audio_subtitle">音频转写</string>
+  <string name="duanyu_tab_skills_subtitle">技能代理</string>
+  <string name="duanyu_tab_settings_subtitle">应用与模型</string>
+  <string name="duanyu_model_list_load_failed">模型列表加载失败</string>
+  <string name="duanyu_action_retry">重试</string>
+  <string name="duanyu_action_close">关闭</string>
+  <string name="duanyu_models_label">模型</string>
+  <string name="duanyu_downloaded_label">已下载</string>
+  <string name="duanyu_select_model_start">选择模型并开始</string>
+  <string name="duanyu_current_entry">当前入口</string>
+  <string name="duanyu_settings_title">设置</string>
+  <string name="duanyu_settings_subtitle">模型、通知、主题</string>
+  <string name="duanyu_model_manager_title">模型管理</string>
+  <string name="duanyu_model_manager_subtitle">下载、导入、删除</string>
+  <string name="duanyu_notifications_title">通知</string>
+  <string name="duanyu_notifications_subtitle">定时提醒与任务通知</string>
+  <string name="duanyu_theme_settings_title">主题设置</string>
+  <string name="duanyu_theme_settings_subtitle">浅色、深色、跟随系统</string>
+  <string name="duanyu_loading_model_list">正在加载模型列表</string>
+</resources>

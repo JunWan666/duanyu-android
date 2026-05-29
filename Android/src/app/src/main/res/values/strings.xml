@@ -16,6 +16,36 @@
 
 <resources>
   <!-- TODO(jingjin): Add translation support when i18n is ready. -->
+  <string name="duanyu_tab_chat">Chat</string>
+  <string name="duanyu_tab_image">Image</string>
+  <string name="duanyu_tab_audio">Audio</string>
+  <string name="duanyu_tab_skills">Skills</string>
+  <string name="duanyu_tab_settings">Settings</string>
+  <string name="duanyu_feature_ai_chat">AI Chat</string>
+  <string name="duanyu_feature_ask_image">Ask Image</string>
+  <string name="duanyu_feature_ask_audio">Ask Audio</string>
+  <string name="duanyu_feature_agent_skills">Agent Skills</string>
+  <string name="duanyu_tab_chat_subtitle">Conversation</string>
+  <string name="duanyu_tab_image_subtitle">Image Q&amp;A</string>
+  <string name="duanyu_tab_audio_subtitle">Audio transcription</string>
+  <string name="duanyu_tab_skills_subtitle">Agent tools</string>
+  <string name="duanyu_tab_settings_subtitle">App and models</string>
+  <string name="duanyu_model_list_load_failed">Failed to load model list</string>
+  <string name="duanyu_action_retry">Retry</string>
+  <string name="duanyu_action_close">Close</string>
+  <string name="duanyu_models_label">Models</string>
+  <string name="duanyu_downloaded_label">Downloaded</string>
+  <string name="duanyu_select_model_start">Select model and start</string>
+  <string name="duanyu_current_entry">Current entry</string>
+  <string name="duanyu_settings_title">Settings</string>
+  <string name="duanyu_settings_subtitle">Models, notifications, theme</string>
+  <string name="duanyu_model_manager_title">Model Manager</string>
+  <string name="duanyu_model_manager_subtitle">Download, import, delete</string>
+  <string name="duanyu_notifications_title">Notifications</string>
+  <string name="duanyu_notifications_subtitle">Scheduled reminders and task notifications</string>
+  <string name="duanyu_theme_settings_title">Theme</string>
+  <string name="duanyu_theme_settings_subtitle">Light, dark, system default</string>
+  <string name="duanyu_loading_model_list">Loading model list</string>
   <string name="about_this_update" translatable="false">About this update</string>
   <string name="all" translatable="false">All</string>
   <string name="add" translatable="false">Add</string>
@@ -26,9 +56,9 @@
   <string name="aicore_image_limit_message" translatable="false">The current model can only support 1 image per chat. To ask about another image, create a new chat.</string>
   <string name="aichat_initializing_title" translatable="false">Initializing model</string>
   <string name="aichat_initializing_content" translatable="false">Sit tight, this can take up to 1 minute</string>
-  <string name="app_intro" translatable="false">本地 AI 对话、图片问答、音频转写与技能自动化</string>
-  <string name="app_name" translatable="false">端语</string>
-  <string name="app_name_first_part" translatable="false">端语</string>
+  <string name="app_intro">Local AI chat, image Q&amp;A, audio transcription, and agent skills</string>
+  <string name="app_name">DuanYu</string>
+  <string name="app_name_first_part">DuanYu</string>
   <string name="app_name_second_part" translatable="false">DuanYu</string>
   <string name="askimage_emptystate_title" translatable="false">Ask Image</string>
   <string name="askimage_emptystate_content" translatable="false">To get started, tap the + below to add an image (max 10 images per chat) and type a prompt to ask a question about it!</string>

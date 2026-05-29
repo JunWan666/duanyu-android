@@ -21,6 +21,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -98,9 +99,9 @@ import kotlinx.coroutines.delay
 private const val NOTIFICATION_PERMISSION_DELAY_MS = 1200L
 
 private data class DuanYuHomeTab(
-  val label: String,
-  val title: String,
-  val subtitle: String,
+  @param:StringRes val labelRes: Int,
+  @param:StringRes val titleRes: Int,
+  @param:StringRes val subtitleRes: Int,
   val taskId: String?,
   val icon: ImageVector,
 )
@@ -108,37 +109,37 @@ private data class DuanYuHomeTab(
 private val HomeTabs =
   listOf(
     DuanYuHomeTab(
-      label = "对话",
-      title = "AI Chat",
-      subtitle = "连续对话",
+      labelRes = R.string.duanyu_tab_chat,
+      titleRes = R.string.duanyu_feature_ai_chat,
+      subtitleRes = R.string.duanyu_tab_chat_subtitle,
       taskId = BuiltInTaskId.LLM_CHAT,
       icon = Icons.Outlined.Forum,
     ),
     DuanYuHomeTab(
-      label = "图片",
-      title = "Ask Image",
-      subtitle = "图片问答",
+      labelRes = R.string.duanyu_tab_image,
+      titleRes = R.string.duanyu_feature_ask_image,
+      subtitleRes = R.string.duanyu_tab_image_subtitle,
       taskId = BuiltInTaskId.LLM_ASK_IMAGE,
       icon = Icons.Outlined.Mms,
     ),
     DuanYuHomeTab(
-      label = "音频",
-      title = "Ask Audio",
-      subtitle = "音频转写",
+      labelRes = R.string.duanyu_tab_audio,
+      titleRes = R.string.duanyu_feature_ask_audio,
+      subtitleRes = R.string.duanyu_tab_audio_subtitle,
       taskId = BuiltInTaskId.LLM_ASK_AUDIO,
       icon = Icons.Outlined.Mic,
     ),
     DuanYuHomeTab(
-      label = "技能",
-      title = "Agent Skills",
-      subtitle = "技能代理",
+      labelRes = R.string.duanyu_tab_skills,
+      titleRes = R.string.duanyu_feature_agent_skills,
+      subtitleRes = R.string.duanyu_tab_skills_subtitle,
       taskId = BuiltInTaskId.LLM_AGENT_CHAT,
       icon = Icons.Outlined.AutoAwesome,
     ),
     DuanYuHomeTab(
-      label = "设置",
-      title = "设置",
-      subtitle = "应用与模型",
+      labelRes = R.string.duanyu_tab_settings,
+      titleRes = R.string.duanyu_settings_title,
+      subtitleRes = R.string.duanyu_tab_settings_subtitle,
       taskId = null,
       icon = Icons.Outlined.Settings,
     ),
@@ -197,7 +198,7 @@ fun DuanYuHomeScreen(
                 fontWeight = FontWeight.SemiBold,
               )
               Text(
-                text = "DuanYu",
+                text = stringResource(R.string.app_name_second_part),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )
@@ -220,7 +221,7 @@ fun DuanYuHomeScreen(
               selected = selectedTabIndex == index,
               onClick = { selectedTabIndex = index },
               icon = { Icon(tab.icon, contentDescription = null) },
-              label = { Text(tab.label, maxLines = 1) },
+              label = { Text(stringResource(tab.labelRes), maxLines = 1) },
               alwaysShowLabel = true,
             )
           }
@@ -289,15 +290,17 @@ fun DuanYuHomeScreen(
           tint = MaterialTheme.colorScheme.error,
         )
       },
-      title = { Text("模型列表加载失败") },
+      title = { Text(stringResource(R.string.duanyu_model_list_load_failed)) },
       text = { Text(uiState.loadingModelAllowlistError) },
       onDismissRequest = { modelManagerViewModel.clearLoadModelAllowlistError() },
       confirmButton = {
-        TextButton(onClick = { modelManagerViewModel.loadModelAllowlist() }) { Text("重试") }
+        TextButton(onClick = { modelManagerViewModel.loadModelAllowlist() }) {
+          Text(stringResource(R.string.duanyu_action_retry))
+        }
       },
       dismissButton = {
         TextButton(onClick = { modelManagerViewModel.clearLoadModelAllowlistError() }) {
-          Text("关闭")
+          Text(stringResource(R.string.duanyu_action_close))
         }
       },
     )
@@ -311,6 +314,9 @@ private fun DuanYuTaskPage(
   uiState: ModelManagerUiState,
   onStart: (Task) -> Unit,
 ) {
+  val tabLabel = stringResource(tab.labelRes)
+  val tabTitle = stringResource(tab.titleRes)
+  val tabSubtitle = stringResource(tab.subtitleRes)
   val colors = MaterialTheme.customColors.taskBgGradientColors
   val gradientColors =
     remember(tab.taskId, colors) {
@@ -359,14 +365,14 @@ private fun DuanYuTaskPage(
             }
             Column(modifier = Modifier.weight(1f)) {
               Text(
-                text = tab.label,
+                text = tabLabel,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
               )
               Text(
-                text = tab.title,
+                text = tabTitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -378,9 +384,13 @@ private fun DuanYuTaskPage(
 
         Spacer(modifier = Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-          DuanYuStatPill(label = "模型", value = models.size.toString(), modifier = Modifier.weight(1f))
           DuanYuStatPill(
-            label = "已下载",
+            label = stringResource(R.string.duanyu_models_label),
+            value = models.size.toString(),
+            modifier = Modifier.weight(1f),
+          )
+          DuanYuStatPill(
+            label = stringResource(R.string.duanyu_downloaded_label),
             value = downloadedCount.toString(),
             modifier = Modifier.weight(1f),
           )
@@ -393,7 +403,10 @@ private fun DuanYuTaskPage(
           shape = RoundedCornerShape(8.dp),
         ) {
           Icon(Icons.Rounded.PlayArrow, contentDescription = null)
-          Text(text = "选择模型并开始", modifier = Modifier.padding(start = 8.dp))
+          Text(
+            text = stringResource(R.string.duanyu_select_model_start),
+            modifier = Modifier.padding(start = 8.dp),
+          )
         }
       }
     }
@@ -401,7 +414,7 @@ private fun DuanYuTaskPage(
     Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
       Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
         Text(
-          text = "当前入口",
+          text = stringResource(R.string.duanyu_current_entry),
           style = MaterialTheme.typography.titleMedium,
           fontWeight = FontWeight.SemiBold,
         )
@@ -416,12 +429,12 @@ private fun DuanYuTaskPage(
           }
           Column(modifier = Modifier.padding(start = 14.dp).weight(1f)) {
             Text(
-              text = task?.label ?: tab.title,
+              text = task?.label ?: tabTitle,
               style = MaterialTheme.typography.titleSmall,
               fontWeight = FontWeight.Medium,
             )
             Text(
-              text = tab.subtitle,
+              text = tabSubtitle,
               style = MaterialTheme.typography.bodySmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -449,17 +462,25 @@ private fun DuanYuSettingsPage(
   ) {
     Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
       Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-        Text("设置", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
         Text(
-          "模型、通知、主题",
+          stringResource(R.string.duanyu_settings_title),
+          style = MaterialTheme.typography.headlineSmall,
+          fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+          stringResource(R.string.duanyu_settings_subtitle),
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-          DuanYuStatPill(label = "模型", value = totalModels.toString(), modifier = Modifier.weight(1f))
           DuanYuStatPill(
-            label = "已下载",
+            label = stringResource(R.string.duanyu_models_label),
+            value = totalModels.toString(),
+            modifier = Modifier.weight(1f),
+          )
+          DuanYuStatPill(
+            label = stringResource(R.string.duanyu_downloaded_label),
             value = downloadedModels.toString(),
             modifier = Modifier.weight(1f),
           )
@@ -471,22 +492,22 @@ private fun DuanYuSettingsPage(
       Column(modifier = Modifier.fillMaxWidth()) {
         DuanYuSettingsRow(
           icon = Icons.AutoMirrored.Rounded.ListAlt,
-          title = "模型管理",
-          subtitle = "下载、导入、删除",
+          title = stringResource(R.string.duanyu_model_manager_title),
+          subtitle = stringResource(R.string.duanyu_model_manager_subtitle),
           onClick = onModelsClicked,
         )
         HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
         DuanYuSettingsRow(
           icon = Icons.Rounded.Notifications,
-          title = "通知",
-          subtitle = "定时提醒与任务通知",
+          title = stringResource(R.string.duanyu_notifications_title),
+          subtitle = stringResource(R.string.duanyu_notifications_subtitle),
           onClick = onNotificationsClicked,
         )
         HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
         DuanYuSettingsRow(
           icon = Icons.Outlined.Settings,
-          title = "主题设置",
-          subtitle = "浅色、深色、跟随系统",
+          title = stringResource(R.string.duanyu_theme_settings_title),
+          subtitle = stringResource(R.string.duanyu_theme_settings_subtitle),
           onClick = onThemeClicked,
         )
       }
@@ -554,6 +575,6 @@ private fun DuanYuLoadingState(modifier: Modifier = Modifier) {
     verticalAlignment = Alignment.CenterVertically,
   ) {
     CircularProgressIndicator(strokeWidth = 3.dp, modifier = Modifier.size(20.dp))
-    Text("正在加载模型列表", style = MaterialTheme.typography.bodyMedium)
+    Text(stringResource(R.string.duanyu_loading_model_list), style = MaterialTheme.typography.bodyMedium)
   }
 }
