@@ -29,6 +29,10 @@ import com.google.ai.edge.gallery.common.ProjectConfig
 import com.google.ai.edge.gallery.common.SystemPromptHelper
 import com.google.ai.edge.gallery.common.getJsonResponse
 import com.google.ai.edge.gallery.common.isAICoreSupported
+import com.google.ai.edge.gallery.coreai.DuanYuAiTaskType
+import com.google.ai.edge.gallery.coreai.DuanYuModelDescriptor
+import com.google.ai.edge.gallery.coreai.DuanYuModelInstallState
+import com.google.ai.edge.gallery.coreai.DuanYuModelRegistry
 import com.google.ai.edge.gallery.customtasks.common.CustomTask
 import com.google.ai.edge.gallery.data.Accelerator
 import com.google.ai.edge.gallery.data.BuiltInTaskId
@@ -182,6 +186,28 @@ private fun targetTaskSupportsModel(taskId: String, model: Model): Boolean {
   }
 }
 
+private fun taskTypeFromTaskId(taskId: String): DuanYuAiTaskType? {
+  return when (taskId) {
+    BuiltInTaskId.LLM_CHAT -> DuanYuAiTaskType.CHAT
+    BuiltInTaskId.LLM_ASK_IMAGE -> DuanYuAiTaskType.IMAGE
+    BuiltInTaskId.LLM_ASK_AUDIO -> DuanYuAiTaskType.AUDIO
+    BuiltInTaskId.LLM_AGENT_CHAT -> DuanYuAiTaskType.AGENT
+    else -> null
+  }
+}
+
+private fun installStateFromStatus(status: ModelDownloadStatus?): DuanYuModelInstallState {
+  return when (status?.status) {
+    ModelDownloadStatusType.NOT_DOWNLOADED -> DuanYuModelInstallState.NOT_INSTALLED
+    ModelDownloadStatusType.SUCCEEDED -> DuanYuModelInstallState.INSTALLED
+    ModelDownloadStatusType.IN_PROGRESS,
+    ModelDownloadStatusType.PARTIALLY_DOWNLOADED,
+    ModelDownloadStatusType.UNZIPPING -> DuanYuModelInstallState.IN_PROGRESS
+    ModelDownloadStatusType.FAILED -> DuanYuModelInstallState.FAILED
+    null -> DuanYuModelInstallState.UNKNOWN
+  }
+}
+
 /**
  * ViewModel responsible for managing models, their download status, and initialization.
  *
@@ -198,7 +224,8 @@ constructor(
   private val lifecycleProvider: AppLifecycleProvider,
   private val customTasks: Set<@JvmSuppressWildcards CustomTask>,
   private val systemPromptRepository: SystemPromptRepository,
-  @ApplicationContext private val context: Context,
+  private val modelRegistry: DuanYuModelRegistry,
+  @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
   private val externalFilesDir = context.getExternalFilesDir(null)
   protected val _uiState = MutableStateFlow(createEmptyUiState())
@@ -265,6 +292,46 @@ constructor(
     }
   }
 
+  private fun syncModelRegistry(state: ModelManagerUiState = uiState.value) {
+    modelRegistry.updateModels(createModelDescriptors(state = state))
+  }
+
+  private fun createModelDescriptors(state: ModelManagerUiState): List<DuanYuModelDescriptor> {
+    val modelsByName = linkedMapOf<String, Model>()
+    val taskTypesByModel = mutableMapOf<String, MutableSet<DuanYuAiTaskType>>()
+    for (task in state.tasks) {
+      val taskType = taskTypeFromTaskId(task.id) ?: continue
+      for (model in task.models) {
+        modelsByName.putIfAbsent(model.name, model)
+        taskTypesByModel.getOrPut(model.name) { mutableSetOf() }.add(taskType)
+      }
+    }
+
+    return modelsByName.values.map { model ->
+      DuanYuModelDescriptor(
+        id = model.name,
+        displayName = model.displayName.ifEmpty { model.name },
+        taskTypes = taskTypesByModel[model.name]?.toSet().orEmpty(),
+        installState = installStateFromStatus(state.modelDownloadStatus[model.name]),
+        imported = model.imported,
+        runtimeType = model.runtimeType.name,
+        fileName = model.downloadFileName,
+        sizeInBytes = model.totalBytes,
+        path =
+          if (
+            state.modelDownloadStatus[model.name]?.status == ModelDownloadStatusType.SUCCEEDED ||
+              model.imported
+          ) {
+            model.getPath(context)
+          } else {
+            null
+          },
+        supportsImage = model.llmSupportImage,
+        supportsAudio = model.llmSupportAudio,
+      )
+    }
+  }
+
   fun processTasks() {
     val curTasks = getActiveCustomTasks().map { it.task }
     for (task in curTasks) {
@@ -286,7 +353,9 @@ constructor(
 
   fun selectModel(model: Model) {
     if (_uiState.value.selectedModel.name != model.name) {
-      _uiState.update { it.copy(selectedModel = model) }
+      _uiState.update {
+        it.copy(selectedModel = model).also { updatedState -> syncModelRegistry(updatedState) }
+      }
     }
   }
 
@@ -401,11 +470,13 @@ constructor(
       dataStoreRepository.saveImportedModels(importedModels = importedModels)
     }
     _uiState.update {
-      it.copy(
-        modelDownloadStatus = curModelDownloadStatus,
-        tasks = it.tasks.toList(),
-        modelImportingUpdateTrigger = System.currentTimeMillis(),
-      )
+      it
+        .copy(
+          modelDownloadStatus = curModelDownloadStatus,
+          tasks = it.tasks.toList(),
+          modelImportingUpdateTrigger = System.currentTimeMillis(),
+        )
+        .also { updatedState -> syncModelRegistry(updatedState) }
     }
   }
 
@@ -539,7 +610,10 @@ constructor(
       deleteFileFromExternalFilesDir(curModel.downloadFileName)
     }
 
-    _uiState.update { it.copy(modelDownloadStatus = curModelDownloadStatus) }
+    _uiState.update {
+      it.copy(modelDownloadStatus = curModelDownloadStatus)
+        .also { updatedState -> syncModelRegistry(updatedState) }
+    }
   }
 
   fun setInitializationStatus(model: Model, status: ModelInitializationStatus) {
@@ -660,12 +734,14 @@ constructor(
 
     // Update ui state.
     _uiState.update {
-      it.copy(
-        tasks = it.tasks.toList(),
-        modelDownloadStatus = modelDownloadStatus,
-        modelInitializationStatus = modelInstances,
-        modelImportingUpdateTrigger = System.currentTimeMillis(),
-      )
+      it
+        .copy(
+          tasks = it.tasks.toList(),
+          modelDownloadStatus = modelDownloadStatus,
+          modelInitializationStatus = modelInstances,
+          modelImportingUpdateTrigger = System.currentTimeMillis(),
+        )
+        .also { updatedState -> syncModelRegistry(updatedState) }
     }
 
     // Add to data store.
@@ -989,6 +1065,7 @@ constructor(
               tasks = curTasks,
               tasksByCategory = groupTasksByCategory(),
             )
+            .also { updatedState -> syncModelRegistry(updatedState) }
         }
 
         // Process pending downloads.
@@ -1013,6 +1090,7 @@ constructor(
           loadingModelAllowlistError = "",
           tasksByCategory = groupTasksByCategory(),
         )
+        .also { updatedState -> syncModelRegistry(updatedState) }
     }
   }
 

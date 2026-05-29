@@ -28,6 +28,10 @@ import com.google.ai.edge.gallery.GalleryLifecycleProvider
 import com.google.ai.edge.gallery.SettingsSerializer
 import com.google.ai.edge.gallery.SkillsSerializer
 import com.google.ai.edge.gallery.UserDataSerializer
+import com.google.ai.edge.gallery.coreai.DefaultDuanYuAiService
+import com.google.ai.edge.gallery.coreai.DefaultDuanYuModelRegistry
+import com.google.ai.edge.gallery.coreai.DuanYuAiService
+import com.google.ai.edge.gallery.coreai.DuanYuModelRegistry
 import com.google.ai.edge.gallery.data.DataStoreRepository
 import com.google.ai.edge.gallery.data.DefaultDataStoreRepository
 import com.google.ai.edge.gallery.data.DefaultDownloadRepository
@@ -183,6 +187,18 @@ internal object AppModule {
     lifecycleProvider: AppLifecycleProvider,
   ): DownloadRepository {
     return DefaultDownloadRepository(context, lifecycleProvider)
+  }
+
+  @Provides
+  @Singleton
+  fun provideDuanYuModelRegistry(registry: DefaultDuanYuModelRegistry): DuanYuModelRegistry {
+    return registry
+  }
+
+  @Provides
+  @Singleton
+  fun provideDuanYuAiService(service: DefaultDuanYuAiService): DuanYuAiService {
+    return service
   }
 
   @Provides
