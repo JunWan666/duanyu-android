@@ -44,6 +44,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ListAlt
 import androidx.compose.material.icons.outlined.Api
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -66,7 +68,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.NavigationBar
@@ -120,6 +121,15 @@ private const val NOTIFICATION_PERMISSION_DELAY_MS = 1200L
 private val THEME_OPTIONS = listOf(Theme.THEME_AUTO, Theme.THEME_LIGHT, Theme.THEME_DARK)
 private val LANGUAGE_OPTIONS =
   listOf(DuanYuLanguage.SYSTEM, DuanYuLanguage.ZH_CN, DuanYuLanguage.EN)
+
+private enum class DuanYuSettingsDestination {
+  ROOT,
+  API,
+  LANGUAGE,
+  THEME,
+  TERMS,
+  ABOUT,
+}
 
 private data class DuanYuHomeTab(
   @param:StringRes val labelRes: Int,
@@ -223,14 +233,6 @@ fun DuanYuHomeScreen(
                 text = stringResource(R.string.app_name_second_part),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-              )
-            }
-          },
-          actions = {
-            IconButton(onClick = { selectedTabIndex = HomeTabs.lastIndex }) {
-              Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.cd_app_settings_icon),
               )
             }
           },
@@ -472,16 +474,154 @@ private fun DuanYuSettingsPage(
   val totalModels = uiState.tasks.flatMap { it.models }.distinctBy { it.name }.size
   val downloadedModels =
     uiState.modelDownloadStatus.values.count { it.status == ModelDownloadStatusType.SUCCEEDED }
+  var destination by rememberSaveable { mutableStateOf(DuanYuSettingsDestination.ROOT) }
   var selectedTheme by remember(currentTheme) { mutableStateOf(currentTheme) }
   var selectedLanguage by remember { mutableStateOf(DuanYuLocaleManager.readLanguage(context)) }
-  var showTermsDialog by remember { mutableStateOf(false) }
 
+  when (destination) {
+    DuanYuSettingsDestination.ROOT ->
+      DuanYuSettingsRootPage(
+        totalModels = totalModels,
+        downloadedModels = downloadedModels,
+        onModelsClicked = onModelsClicked,
+        onNotificationsClicked = onNotificationsClicked,
+        onApiClicked = { destination = DuanYuSettingsDestination.API },
+        onLanguageClicked = { destination = DuanYuSettingsDestination.LANGUAGE },
+        onThemeClicked = { destination = DuanYuSettingsDestination.THEME },
+        onTermsClicked = { destination = DuanYuSettingsDestination.TERMS },
+        onAboutClicked = { destination = DuanYuSettingsDestination.ABOUT },
+      )
+
+    DuanYuSettingsDestination.API ->
+      DuanYuSettingsDetailPage(
+        title = stringResource(R.string.duanyu_api_service_title),
+        subtitle = stringResource(R.string.duanyu_api_service_subtitle),
+        icon = Icons.Outlined.Api,
+        onBack = { destination = DuanYuSettingsDestination.ROOT },
+      ) {
+        Text(
+          stringResource(R.string.duanyu_api_service_detail),
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+
+    DuanYuSettingsDestination.LANGUAGE ->
+      DuanYuSettingsDetailPage(
+        title = stringResource(R.string.duanyu_language_settings_title),
+        subtitle = stringResource(R.string.duanyu_language_settings_subtitle),
+        icon = Icons.Outlined.Language,
+        onBack = { destination = DuanYuSettingsDestination.ROOT },
+      ) {
+        MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+          LANGUAGE_OPTIONS.forEachIndexed { index, language ->
+            SegmentedButton(
+              shape =
+                SegmentedButtonDefaults.itemShape(index = index, count = LANGUAGE_OPTIONS.size),
+              onCheckedChange = {
+                if (selectedLanguage != language) {
+                  selectedLanguage = language
+                  DuanYuLocaleManager.saveLanguage(context, language)
+                  context.findActivity()?.recreate()
+                }
+              },
+              checked = language == selectedLanguage,
+              label = { Text(languageLabel(language)) },
+            )
+          }
+        }
+      }
+
+    DuanYuSettingsDestination.THEME ->
+      DuanYuSettingsDetailPage(
+        title = stringResource(R.string.duanyu_theme_settings_title),
+        subtitle = stringResource(R.string.duanyu_theme_settings_subtitle),
+        icon = Icons.Outlined.Palette,
+        onBack = { destination = DuanYuSettingsDestination.ROOT },
+      ) {
+        MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+          THEME_OPTIONS.forEachIndexed { index, theme ->
+            SegmentedButton(
+              shape = SegmentedButtonDefaults.itemShape(index = index, count = THEME_OPTIONS.size),
+              onCheckedChange = {
+                selectedTheme = theme
+                ThemeSettings.themeOverride.value = theme
+                modelManagerViewModel.saveThemeOverride(theme)
+                context.updateNightMode(theme)
+              },
+              checked = theme == selectedTheme,
+              label = { Text(themeLabel(theme)) },
+            )
+          }
+        }
+      }
+
+    DuanYuSettingsDestination.TERMS ->
+      DuanYuSettingsDetailPage(
+        title = stringResource(R.string.duanyu_terms_title),
+        subtitle = stringResource(R.string.duanyu_terms_subtitle),
+        icon = Icons.Outlined.Security,
+        onBack = { destination = DuanYuSettingsDestination.ROOT },
+      ) {
+        Text(
+          stringResource(R.string.tos_dialog_content_app),
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+
+    DuanYuSettingsDestination.ABOUT ->
+      DuanYuSettingsDetailPage(
+        title = stringResource(R.string.duanyu_about_title),
+        subtitle =
+          stringResource(
+            R.string.duanyu_about_subtitle,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE,
+          ),
+        icon = Icons.Outlined.Info,
+        onBack = { destination = DuanYuSettingsDestination.ROOT },
+      ) {
+        DuanYuSettingsRow(
+          icon = Icons.Rounded.Verified,
+          title = stringResource(R.string.duanyu_about_version_title),
+          subtitle =
+            stringResource(
+              R.string.duanyu_about_subtitle,
+              BuildConfig.VERSION_NAME,
+              BuildConfig.VERSION_CODE,
+            ),
+          onClick = {},
+        )
+        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+        DuanYuSettingsRow(
+          icon = Icons.AutoMirrored.Rounded.ListAlt,
+          title = stringResource(R.string.duanyu_licenses_title),
+          subtitle = stringResource(R.string.duanyu_licenses_subtitle),
+          onClick = { context.startActivity(Intent(context, OssLicensesMenuActivity::class.java)) },
+        )
+      }
+  }
+}
+
+@Composable
+private fun DuanYuSettingsRootPage(
+  totalModels: Int,
+  downloadedModels: Int,
+  onModelsClicked: () -> Unit,
+  onNotificationsClicked: () -> Unit,
+  onApiClicked: () -> Unit,
+  onLanguageClicked: () -> Unit,
+  onThemeClicked: () -> Unit,
+  onTermsClicked: () -> Unit,
+  onAboutClicked: () -> Unit,
+) {
   Column(
-    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-    verticalArrangement = Arrangement.spacedBy(16.dp),
+    modifier = Modifier.fillMaxSize().padding(16.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
     Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
-      Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+      Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Text(
           stringResource(R.string.duanyu_settings_title),
           style = MaterialTheme.typography.headlineSmall,
@@ -492,7 +632,7 @@ private fun DuanYuSettingsPage(
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
           DuanYuStatPill(
             label = stringResource(R.string.duanyu_models_label),
@@ -508,112 +648,188 @@ private fun DuanYuSettingsPage(
       }
     }
 
-    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
-      Column(modifier = Modifier.fillMaxWidth()) {
-        DuanYuSettingsRow(
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        DuanYuSettingsTile(
           icon = Icons.AutoMirrored.Rounded.ListAlt,
           title = stringResource(R.string.duanyu_model_manager_title),
           subtitle = stringResource(R.string.duanyu_model_manager_subtitle),
+          modifier = Modifier.weight(1f),
           onClick = onModelsClicked,
         )
-        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
-        DuanYuSettingsRow(
+        DuanYuSettingsTile(
           icon = Icons.Outlined.Api,
           title = stringResource(R.string.duanyu_api_service_title),
           subtitle = stringResource(R.string.duanyu_api_service_subtitle),
-          enabled = false,
           trailingText = stringResource(R.string.duanyu_status_planned),
-          onClick = {},
+          modifier = Modifier.weight(1f),
+          onClick = onApiClicked,
         )
-        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
-        DuanYuSettingsRow(
+      }
+      Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        DuanYuSettingsTile(
           icon = Icons.Rounded.Notifications,
           title = stringResource(R.string.duanyu_notifications_title),
           subtitle = stringResource(R.string.duanyu_notifications_subtitle),
+          modifier = Modifier.weight(1f),
           onClick = onNotificationsClicked,
         )
+        DuanYuSettingsTile(
+          icon = Icons.Outlined.Language,
+          title = stringResource(R.string.duanyu_language_settings_title),
+          subtitle = stringResource(R.string.duanyu_language_settings_subtitle),
+          modifier = Modifier.weight(1f),
+          onClick = onLanguageClicked,
+        )
       }
-    }
-
-    DuanYuSettingsSection(
-      title = stringResource(R.string.duanyu_language_settings_title),
-      subtitle = stringResource(R.string.duanyu_language_settings_subtitle),
-      icon = Icons.Outlined.Language,
-    ) {
-      MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        LANGUAGE_OPTIONS.forEachIndexed { index, language ->
-          SegmentedButton(
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = LANGUAGE_OPTIONS.size),
-            onCheckedChange = {
-              if (selectedLanguage != language) {
-                selectedLanguage = language
-                DuanYuLocaleManager.saveLanguage(context, language)
-                context.findActivity()?.recreate()
-              }
-            },
-            checked = language == selectedLanguage,
-            label = { Text(languageLabel(language)) },
-          )
-        }
-      }
-    }
-
-    DuanYuSettingsSection(
-      title = stringResource(R.string.duanyu_theme_settings_title),
-      subtitle = stringResource(R.string.duanyu_theme_settings_subtitle),
-      icon = Icons.Outlined.Palette,
-    ) {
-      MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        THEME_OPTIONS.forEachIndexed { index, theme ->
-          SegmentedButton(
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = THEME_OPTIONS.size),
-            onCheckedChange = {
-              selectedTheme = theme
-              ThemeSettings.themeOverride.value = theme
-              modelManagerViewModel.saveThemeOverride(theme)
-              context.updateNightMode(theme)
-            },
-            checked = theme == selectedTheme,
-            label = { Text(themeLabel(theme)) },
-          )
-        }
-      }
-    }
-
-    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
-      Column(modifier = Modifier.fillMaxWidth()) {
-        DuanYuSettingsRow(
+      Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        DuanYuSettingsTile(
+          icon = Icons.Outlined.Palette,
+          title = stringResource(R.string.duanyu_theme_settings_title),
+          subtitle = stringResource(R.string.duanyu_theme_settings_subtitle),
+          modifier = Modifier.weight(1f),
+          onClick = onThemeClicked,
+        )
+        DuanYuSettingsTile(
           icon = Icons.Outlined.Security,
           title = stringResource(R.string.duanyu_terms_title),
           subtitle = stringResource(R.string.duanyu_terms_subtitle),
-          onClick = { showTermsDialog = true },
+          modifier = Modifier.weight(1f),
+          onClick = onTermsClicked,
         )
-        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
-        DuanYuSettingsRow(
-          icon = Icons.AutoMirrored.Rounded.ListAlt,
-          title = stringResource(R.string.duanyu_licenses_title),
-          subtitle = stringResource(R.string.duanyu_licenses_subtitle),
-          onClick = { context.startActivity(Intent(context, OssLicensesMenuActivity::class.java)) },
-        )
-        HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
-        DuanYuSettingsRow(
+      }
+      Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        DuanYuSettingsTile(
           icon = Icons.Outlined.Info,
           title = stringResource(R.string.duanyu_about_title),
-          subtitle =
-            stringResource(
-              R.string.duanyu_about_subtitle,
-              BuildConfig.VERSION_NAME,
-              BuildConfig.VERSION_CODE,
-            ),
-          trailingIcon = Icons.Rounded.Verified,
-          onClick = {},
+          subtitle = stringResource(R.string.duanyu_about_subtitle_short),
+          modifier = Modifier.weight(1f),
+          onClick = onAboutClicked,
+        )
+        Spacer(modifier = Modifier.weight(1f))
+      }
+    }
+  }
+}
+
+@Composable
+private fun DuanYuSettingsTile(
+  icon: ImageVector,
+  title: String,
+  subtitle: String,
+  trailingText: String? = null,
+  modifier: Modifier = Modifier,
+  onClick: () -> Unit,
+) {
+  Surface(
+    modifier = modifier.height(86.dp),
+    shape = RoundedCornerShape(8.dp),
+    color = MaterialTheme.colorScheme.surface,
+  ) {
+    Column(
+      modifier = Modifier.fillMaxSize().clickable(onClick = onClick).padding(12.dp),
+      verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top,
+      ) {
+        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+          Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.padding(7.dp).size(18.dp),
+          )
+        }
+        if (trailingText != null) {
+          Text(
+            trailingText,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+          )
+        } else {
+          Icon(
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+      }
+      Column {
+        Text(
+          title,
+          style = MaterialTheme.typography.titleSmall,
+          fontWeight = FontWeight.Medium,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+          subtitle,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
         )
       }
     }
   }
+}
 
-  if (showTermsDialog) {
-    AppTosDialog(onTosAccepted = { showTermsDialog = false }, viewingMode = true)
+@Composable
+private fun DuanYuSettingsDetailPage(
+  title: String,
+  subtitle: String,
+  icon: ImageVector,
+  onBack: () -> Unit,
+  content: @Composable () -> Unit,
+) {
+  Column(
+    modifier = Modifier.fillMaxSize().padding(20.dp),
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+  ) {
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
+        Row(
+          horizontalArrangement = Arrangement.spacedBy(14.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            modifier = Modifier.clickable(onClick = onBack),
+          ) {
+            Icon(
+              imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+              contentDescription = stringResource(R.string.cd_navigate_back_icon),
+              modifier = Modifier.padding(10.dp).size(22.dp),
+            )
+          }
+          Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+            Icon(
+              imageVector = icon,
+              contentDescription = null,
+              tint = MaterialTheme.colorScheme.onPrimaryContainer,
+              modifier = Modifier.padding(10.dp).size(22.dp),
+            )
+          }
+          Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(
+              subtitle,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
+        }
+      }
+    }
+
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
+      Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) { content() }
+    }
   }
 }
 
@@ -672,42 +888,12 @@ private fun DuanYuSettingsRow(
         contentDescription = null,
         tint = MaterialTheme.colorScheme.primary,
       )
-    }
-  }
-}
-
-@Composable
-private fun DuanYuSettingsSection(
-  title: String,
-  subtitle: String,
-  icon: ImageVector,
-  content: @Composable () -> Unit,
-) {
-  Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
-    Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
-      Row(
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-          Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.padding(10.dp).size(22.dp),
-          )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-          Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-          Text(
-            subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
-      }
-      Spacer(modifier = Modifier.height(14.dp))
-      content()
+    } else if (enabled) {
+      Icon(
+        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
     }
   }
 }

@@ -30,6 +30,7 @@
   <string name="duanyu_model_manager_subtitle">下载、导入、删除</string>
   <string name="duanyu_api_service_title">API 服务</string>
   <string name="duanyu_api_service_subtitle">OpenAI 兼容本地接口</string>
+  <string name="duanyu_api_service_detail">本地 API 服务将在后续里程碑实现。它会提供 OpenAI 兼容的模型列表、聊天补全、音频转写和技能接口，并且默认关闭。</string>
   <string name="duanyu_status_planned">规划中</string>
   <string name="duanyu_notifications_title">通知</string>
   <string name="duanyu_notifications_subtitle">定时提醒与任务通知</string>
@@ -48,7 +49,9 @@
   <string name="duanyu_licenses_title">开源许可</string>
   <string name="duanyu_licenses_subtitle">应用使用的第三方库</string>
   <string name="duanyu_about_title">关于端语</string>
+  <string name="duanyu_about_subtitle_short">版本与开源信息</string>
   <string name="duanyu_about_subtitle">版本 %1$s（%2$d）</string>
+  <string name="duanyu_about_version_title">版本</string>
   <string name="duanyu_unknown">未知</string>
   <string name="duanyu_loading_model_list">正在加载模型列表</string>
   <string name="tos_dialog_title_app">欢迎使用端语</string>
