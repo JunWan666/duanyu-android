@@ -55,6 +55,9 @@
   <string name="duanyu_model_search_placeholder">Search online models</string>
   <string name="duanyu_model_empty_online">No online models match the current filter.</string>
   <string name="duanyu_model_empty_installed">No installed models in this category yet.</string>
+  <string name="duanyu_export_model">Export model</string>
+  <string name="duanyu_export_model_file_missing">The model file is unavailable for export.</string>
+  <string name="duanyu_export_model_failed">Unable to open export options.</string>
   <string name="duanyu_api_service_title">API Service</string>
   <string name="duanyu_api_service_subtitle">OpenAI-compatible local interface</string>
   <string name="duanyu_api_service_detail">The local API service is planned for a later milestone. It will provide OpenAI-compatible endpoints for models, chat completions, audio transcription, and skills, and will stay off by default.</string>

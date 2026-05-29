@@ -398,6 +398,7 @@ fun GlobalModelManager(
             onBenchmarkClicked = onBenchmarkClicked,
             expanded = expanded,
             showDeleteButton = selectedPage == ModelManagerPage.INSTALLED,
+            showExportButton = selectedPage == ModelManagerPage.INSTALLED,
             showBenchmarkButton = false,
             onExpanded = { modelItemExpandedStates[model.name] = it },
           )

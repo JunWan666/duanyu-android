@@ -16,6 +16,9 @@
 
 package com.google.ai.edge.gallery.ui.common.modelitem
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -35,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.UnfoldLess
 import androidx.compose.material.icons.rounded.UnfoldMore
 import androidx.compose.material3.DropdownMenu
@@ -55,12 +59,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.google.ai.edge.gallery.R
 import com.google.ai.edge.gallery.data.Model
 import com.google.ai.edge.gallery.data.ModelDownloadStatus
@@ -72,6 +78,7 @@ import com.google.ai.edge.gallery.ui.common.tos.TosViewModel
 import com.google.ai.edge.gallery.ui.modelmanager.ModelManagerViewModel
 import com.google.ai.edge.gallery.ui.theme.bodyMediumMedium
 import com.google.ai.edge.gallery.ui.theme.customColors
+import java.io.File
 import kotlin.text.toFloat
 
 /**
@@ -92,6 +99,7 @@ fun ModelItem(
   modifier: Modifier = Modifier,
   expanded: Boolean? = null,
   showDeleteButton: Boolean = true,
+  showExportButton: Boolean = false,
   canExpand: Boolean = true,
   showBenchmarkButton: Boolean = false,
   onExpanded: (Boolean) -> Unit = {},
@@ -151,15 +159,20 @@ fun ModelItem(
           if (
             modelVariants.isEmpty() && downloadStatus?.status == ModelDownloadStatusType.SUCCEEDED
           ) {
-            ModelItemActionMenu(
-              model = model,
-              modelManagerViewModel = modelManagerViewModel,
-              showBenchmarkButton = showBenchmarkButton,
-              showDeleteButton =
-                showDeleteButton && model.localFileRelativeDirPathOverride.isEmpty() && !isAicore,
-              onBenchmarkClicked = { onBenchmarkClicked(model) },
-              modifier = Modifier.offset(y = (-12).dp),
-            )
+            val canExport = showExportButton && !isAicore
+            val canDelete =
+              showDeleteButton && model.localFileRelativeDirPathOverride.isEmpty() && !isAicore
+            if (showBenchmarkButton || canExport || canDelete) {
+              ModelItemActionMenu(
+                model = model,
+                modelManagerViewModel = modelManagerViewModel,
+                showBenchmarkButton = showBenchmarkButton,
+                showExportButton = canExport,
+                showDeleteButton = canDelete,
+                onBenchmarkClicked = { onBenchmarkClicked(model) },
+                modifier = Modifier.offset(y = (-12).dp),
+              )
+            }
           }
           if (!model.imported) {
             Icon(
@@ -253,6 +266,7 @@ fun ModelItem(
                     modelManagerViewModel = modelManagerViewModel,
                     showBenchmarkButton = showBenchmarkButton,
                     showDeleteButton = showDeleteButton,
+                    showExportButton = showExportButton,
                     onBenchmarkClicked = onBenchmarkClicked,
                     modifier = modifier,
                     labelModifier =
@@ -359,6 +373,7 @@ fun ModelVariantHeader(
   modelManagerViewModel: ModelManagerViewModel,
   showBenchmarkButton: Boolean,
   showDeleteButton: Boolean,
+  showExportButton: Boolean,
   onBenchmarkClicked: (Model) -> Unit,
   modifier: Modifier = Modifier,
   labelModifier: Modifier = Modifier,
@@ -388,17 +403,22 @@ fun ModelVariantHeader(
     }
     // Model action menu (benchmark, delete)
     if (downloadStatus?.status == ModelDownloadStatusType.SUCCEEDED) {
-      ModelItemActionMenu(
-        model = variantModel,
-        modelManagerViewModel = modelManagerViewModel,
-        showBenchmarkButton = showBenchmarkButton,
-        showDeleteButton =
-          showDeleteButton &&
-            variantModel.localFileRelativeDirPathOverride.isEmpty() &&
-            variantModel.runtimeType != RuntimeType.AICORE,
-        onBenchmarkClicked = { onBenchmarkClicked(variantModel) },
-        modifier = menuModifier.offset(y = (-12).dp),
-      )
+      val canExport = showExportButton && variantModel.runtimeType != RuntimeType.AICORE
+      val canDelete =
+        showDeleteButton &&
+          variantModel.localFileRelativeDirPathOverride.isEmpty() &&
+          variantModel.runtimeType != RuntimeType.AICORE
+      if (showBenchmarkButton || canExport || canDelete) {
+        ModelItemActionMenu(
+          model = variantModel,
+          modelManagerViewModel = modelManagerViewModel,
+          showBenchmarkButton = showBenchmarkButton,
+          showExportButton = canExport,
+          showDeleteButton = canDelete,
+          onBenchmarkClicked = { onBenchmarkClicked(variantModel) },
+          modifier = menuModifier.offset(y = (-12).dp),
+        )
+      }
     }
   }
 }
@@ -409,12 +429,14 @@ fun ModelItemActionMenu(
   model: Model,
   modelManagerViewModel: ModelManagerViewModel,
   showBenchmarkButton: Boolean,
+  showExportButton: Boolean,
   onBenchmarkClicked: () -> Unit,
   showDeleteButton: Boolean,
   modifier: Modifier = Modifier,
 ) {
   var showMenu by remember { mutableStateOf(false) }
   var showConfirmDeleteDialog by remember { mutableStateOf(false) }
+  val context = LocalContext.current
 
   Box(modifier = modifier) {
     IconButton(onClick = { showMenu = true }) {
@@ -439,6 +461,23 @@ fun ModelItemActionMenu(
           onClick = {
             onBenchmarkClicked()
             showMenu = false
+          },
+        )
+      }
+      if (showExportButton) {
+        DropdownMenuItem(
+          text = {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+              Icon(Icons.Rounded.Share, contentDescription = null)
+              Text(stringResource(R.string.duanyu_export_model))
+            }
+          },
+          onClick = {
+            showMenu = false
+            exportModel(context = context, model = model)
           },
         )
       }
@@ -471,6 +510,30 @@ fun ModelItemActionMenu(
       )
     }
   }
+}
+
+private fun exportModel(context: Context, model: Model) {
+  val file = File(model.getPath(context = context))
+  if (!file.exists() || file.isDirectory) {
+    Toast.makeText(context, R.string.duanyu_export_model_file_missing, Toast.LENGTH_SHORT).show()
+    return
+  }
+
+  runCatching {
+      val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+      val intent =
+        Intent(Intent.ACTION_SEND).apply {
+          type = "application/octet-stream"
+          putExtra(Intent.EXTRA_STREAM, uri)
+          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+      context.startActivity(
+        Intent.createChooser(intent, context.getString(R.string.duanyu_export_model))
+      )
+    }
+    .onFailure {
+      Toast.makeText(context, R.string.duanyu_export_model_failed, Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun calculateDownloadProgress(downloadStatus: ModelDownloadStatus?): Float {
