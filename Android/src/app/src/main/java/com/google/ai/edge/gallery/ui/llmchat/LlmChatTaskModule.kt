@@ -74,6 +74,9 @@ class LlmChatTask @Inject constructor() : CustomTask {
       sourceCodeUrl =
         "https://github.com/google-ai-edge/gallery/blob/main/Android/src/app/src/main/java/com/google/ai/edge/gallery/ui/llmchat/LlmChatModelHelper.kt",
       textInputPlaceHolderRes = R.string.text_input_placeholder_llm_chat,
+      localizedLabelRes = R.string.duanyu_feature_ai_chat,
+      localizedDescriptionRes = R.string.duanyu_task_ai_chat_description,
+      localizedShortDescriptionRes = R.string.duanyu_task_ai_chat_short_description,
     )
 
   override fun initializeModelFn(
@@ -175,6 +178,9 @@ class LlmAskImageTask @Inject constructor() : CustomTask {
       sourceCodeUrl =
         "https://github.com/google-ai-edge/gallery/blob/main/Android/src/app/src/main/java/com/google/ai/edge/gallery/ui/llmchat/LlmChatModelHelper.kt",
       textInputPlaceHolderRes = R.string.text_input_placeholder_llm_chat,
+      localizedLabelRes = R.string.duanyu_feature_ask_image,
+      localizedDescriptionRes = R.string.duanyu_task_ask_image_description,
+      localizedShortDescriptionRes = R.string.duanyu_task_ask_image_short_description,
     )
 
   override fun initializeModelFn(
@@ -259,6 +265,9 @@ class LlmAskAudioTask @Inject constructor() : CustomTask {
       sourceCodeUrl =
         "https://github.com/google-ai-edge/gallery/blob/main/Android/src/app/src/main/java/com/google/ai/edge/gallery/ui/llmchat/LlmChatModelHelper.kt",
       textInputPlaceHolderRes = R.string.text_input_placeholder_llm_chat,
+      localizedLabelRes = R.string.duanyu_feature_ask_audio,
+      localizedDescriptionRes = R.string.duanyu_task_ask_audio_description,
+      localizedShortDescriptionRes = R.string.duanyu_task_ask_audio_short_description,
     )
 
   override fun initializeModelFn(

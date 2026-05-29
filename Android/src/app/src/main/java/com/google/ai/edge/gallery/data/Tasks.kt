@@ -16,6 +16,7 @@
 
 package com.google.ai.edge.gallery.data
 
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableLongStateOf
@@ -122,12 +123,33 @@ data class Task(
   /** Placeholder text for the text input field. */
   @StringRes val textInputPlaceHolderRes: Int = R.string.chat_textinput_placeholder,
 
+  /** Localized label for built-in DuanYu tasks. Falls back to [label] when unset. */
+  @StringRes val localizedLabelRes: Int? = null,
+
+  /** Localized description for built-in DuanYu tasks. Falls back to [description] when unset. */
+  @StringRes val localizedDescriptionRes: Int? = null,
+
+  /** Localized short description. Falls back to [shortDescription] when unset. */
+  @StringRes val localizedShortDescriptionRes: Int? = null,
+
   // The following fields are managed by the app. Don't need to set manually.
   //
 
   var index: Int = -1,
   val updateTrigger: MutableState<Long> = mutableLongStateOf(0),
 ) {
+  fun displayLabel(context: Context): String {
+    return localizedLabelRes?.let(context::getString) ?: label
+  }
+
+  fun displayDescription(context: Context): String {
+    return localizedDescriptionRes?.let(context::getString) ?: description
+  }
+
+  fun displayShortDescription(context: Context): String {
+    return localizedShortDescriptionRes?.let(context::getString) ?: shortDescription
+  }
+
   fun allowCapability(capability: ModelCapability, model: Model): Boolean {
     return model.capabilityToTaskTypes[capability]?.contains(id) == true
   }

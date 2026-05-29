@@ -151,6 +151,12 @@ fun AgentChatScreen(
   val chatWebViewClient = remember { ChatWebViewClient(context = context) }
   var curSystemPrompt by remember { mutableStateOf(task.defaultSystemPrompt) }
   val systemPromptUpdatedMessage = stringResource(R.string.system_prompt_updated)
+  val agentSkillsIntroStart = stringResource(R.string.agent_skills_intro_body_start)
+  val agentSkillsIntroCreateLink = stringResource(R.string.agent_skills_intro_create_link)
+  val agentSkillsIntroMiddle = stringResource(R.string.agent_skills_intro_body_middle)
+  val agentSkillsIntroDiscussionsLink =
+    stringResource(R.string.agent_skills_intro_discussions_link)
+  val agentSkillsIntroEnd = stringResource(R.string.agent_skills_intro_body_end)
   var sendMessageTrigger by remember { mutableStateOf<SendMessageTrigger?>(null) }
   var showAlertForDisabledSkill by remember { mutableStateOf(false) }
   var disabledSkillName by remember { mutableStateOf("") }
@@ -520,21 +526,21 @@ fun AgentChatScreen(
               )
               Text(
                 buildAnnotatedString {
-                  append("Use specialized, high-order reasoning by loading different skills or ")
+                  append(agentSkillsIntroStart)
                   append(
                     buildTrackableUrlAnnotatedString(
                       url = AgentSkillsURLs.REPOSITORY,
-                      linkText = "creating\u00A0your\u00A0own",
+                      linkText = agentSkillsIntroCreateLink,
                     )
                   )
-                  append(". Explore community contributed skills on ")
+                  append(agentSkillsIntroMiddle)
                   append(
                     buildTrackableUrlAnnotatedString(
                       url = AgentSkillsURLs.DISCUSSIONS,
-                      linkText = "GitHub\u00A0discussions",
+                      linkText = agentSkillsIntroDiscussionsLink,
                     )
                   )
-                  append(".\n\nTry tapping a sample prompt below to see Agent Skills in action!")
+                  append(agentSkillsIntroEnd)
                 },
                 style =
                   MaterialTheme.typography.headlineSmall.copy(fontSize = 16.sp, lineHeight = 22.sp),

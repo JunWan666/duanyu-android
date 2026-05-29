@@ -334,6 +334,7 @@ private fun DuanYuTaskPage(
   val tabLabel = stringResource(tab.labelRes)
   val tabTitle = stringResource(tab.titleRes)
   val tabSubtitle = stringResource(tab.subtitleRes)
+  val context = LocalContext.current
   val colors = MaterialTheme.customColors.taskBgGradientColors
   val gradientColors =
     remember(tab.taskId, colors) {
@@ -446,7 +447,7 @@ private fun DuanYuTaskPage(
           }
           Column(modifier = Modifier.padding(start = 14.dp).weight(1f)) {
             Text(
-              text = task?.label ?: tabTitle,
+              text = task?.displayLabel(context) ?: tabTitle,
               style = MaterialTheme.typography.titleSmall,
               fontWeight = FontWeight.Medium,
             )

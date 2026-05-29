@@ -84,7 +84,7 @@ fun ModelPicker(
         contentDescription = null,
       )
       Text(
-        "${task.label} models",
+        stringResource(R.string.duanyu_model_picker_title, task.displayLabel(context)),
         modifier = Modifier.fillMaxWidth(),
         style = MaterialTheme.typography.titleMedium,
         color = getTaskIconColor(task = task),

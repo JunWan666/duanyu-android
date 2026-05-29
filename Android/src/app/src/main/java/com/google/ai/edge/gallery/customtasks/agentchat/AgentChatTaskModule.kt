@@ -134,6 +134,9 @@ class AgentChatTask @Inject constructor() : CustomTask {
         "https://github.com/google-ai-edge/gallery/blob/main/Android/src/app/src/main/java/com/google/ai/edge/gallery/customtasks/agentchat/",
       textInputPlaceHolderRes = R.string.text_input_placeholder_llm_chat,
       defaultSystemPrompt = DEFAULT_SYSTEM_PROMPT_TRIMMED,
+      localizedLabelRes = R.string.duanyu_feature_agent_skills,
+      localizedDescriptionRes = R.string.duanyu_task_agent_skills_description,
+      localizedShortDescriptionRes = R.string.duanyu_task_agent_skills_short_description,
     )
 
   override fun initializeModelFn(

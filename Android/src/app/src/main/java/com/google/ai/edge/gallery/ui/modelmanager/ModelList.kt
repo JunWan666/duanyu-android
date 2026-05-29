@@ -178,6 +178,9 @@ fun ModelList(
       )
     }
   val modelItemExpandedStates = remember { mutableStateMapOf<String, Boolean>() }
+  val context = LocalContext.current
+  val taskLabel = remember(task, context) { task.displayLabel(context) }
+  val taskDescription = remember(task, context) { task.displayDescription(context) }
 
   Box(
     contentAlignment = Alignment.BottomEnd,
@@ -204,11 +207,11 @@ fun ModelList(
           Box(
             modifier =
               Modifier.offset(x = (20f * (1f - taskIconProgress)).dp).semantics {
-                contentDescription = task.label
+                contentDescription = taskLabel
               }
           ) {
             RevealingText(
-              text = task.label,
+              text = taskLabel,
               style =
                 headlineLargeMedium.copy(
                   brush = Brush.linearGradient(getTaskBgGradientColors(task = task))
@@ -217,7 +220,7 @@ fun ModelList(
               animationProgress = taskIconProgress,
             )
             RevealingText(
-              text = task.label,
+              text = taskLabel,
               style = headlineLargeMedium,
               textAlign = TextAlign.Center,
               animationProgress = taskLabelProgress,
@@ -247,7 +250,7 @@ fun ModelList(
 
           // Description.
           Text(
-            task.description,
+            taskDescription,
             textAlign = TextAlign.Center,
             style = bodyLargeNarrow,
             modifier =

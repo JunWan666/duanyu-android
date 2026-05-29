@@ -22,14 +22,23 @@
   <string name="duanyu_tab_settings">Settings</string>
   <string name="duanyu_feature_ai_chat">AI Chat</string>
   <string name="duanyu_feature_ask_image">Ask Image</string>
-  <string name="duanyu_feature_ask_audio">Ask Audio</string>
+  <string name="duanyu_feature_ask_audio">Audio Scribe</string>
   <string name="duanyu_feature_agent_skills">Agent Skills</string>
+  <string name="duanyu_task_ai_chat_description">Chat with on-device large language models.</string>
+  <string name="duanyu_task_ai_chat_short_description">On-device LLM chat</string>
+  <string name="duanyu_task_ask_image_description">Ask questions about images with on-device multimodal models.</string>
+  <string name="duanyu_task_ask_image_short_description">Image Q&amp;A</string>
+  <string name="duanyu_task_ask_audio_description">Transcribe or translate audio clips with on-device models.</string>
+  <string name="duanyu_task_ask_audio_short_description">Audio transcription</string>
+  <string name="duanyu_task_agent_skills_description">Complete tasks with local models, skills, and MCP tools.</string>
+  <string name="duanyu_task_agent_skills_short_description">Agent skills</string>
   <string name="duanyu_tab_chat_subtitle">Conversation</string>
   <string name="duanyu_tab_image_subtitle">Image Q&amp;A</string>
   <string name="duanyu_tab_audio_subtitle">Audio transcription</string>
   <string name="duanyu_tab_skills_subtitle">Agent tools</string>
   <string name="duanyu_tab_settings_subtitle">App and models</string>
   <string name="duanyu_model_list_load_failed">Failed to load model list</string>
+  <string name="duanyu_model_picker_title">%1$s models</string>
   <string name="duanyu_action_retry">Retry</string>
   <string name="duanyu_action_close">Close</string>
   <string name="duanyu_models_label">Models</string>
@@ -74,17 +83,17 @@
   <string name="aicore_access_panel_title" translatable="false">You cannot access this model yet. Please follow the steps and return when complete.</string>
   <string name="aicore_access_panel_button" translatable="false">Open guide</string>
   <string name="aicore_image_limit_message" translatable="false">The current model can only support 1 image per chat. To ask about another image, create a new chat.</string>
-  <string name="aichat_initializing_title" translatable="false">Initializing model</string>
-  <string name="aichat_initializing_content" translatable="false">Sit tight, this can take up to 1 minute</string>
+  <string name="aichat_initializing_title">Initializing model</string>
+  <string name="aichat_initializing_content">Sit tight, this can take up to 1 minute</string>
   <string name="app_intro">Local AI chat, image Q&amp;A, audio transcription, and agent skills</string>
   <string name="app_name">DuanYu</string>
   <string name="app_name_first_part">DuanYu</string>
   <string name="app_name_second_part" translatable="false">DuanYu</string>
-  <string name="askimage_emptystate_title" translatable="false">Ask Image</string>
-  <string name="askimage_emptystate_content" translatable="false">To get started, tap the + below to add an image (max 10 images per chat) and type a prompt to ask a question about it!</string>
-  <string name="askimage_emptystate_content_aicore" translatable="false">To get started, tap the + below to add an image (max 1 image per chat) and type a prompt to ask a question about it!</string>
-  <string name="askaudio_emptystate_title" translatable="false">Ask Audio</string>
-  <string name="askaudio_emptystate_content" translatable="false">To get started, tap the + below to add a audio clip (limited to 1 clip up to 30 seconds) and type a prompt to transcribe or translate it!</string>
+  <string name="askimage_emptystate_title">Ask Image</string>
+  <string name="askimage_emptystate_content">To get started, tap the + below to add an image (max 10 images per chat) and type a prompt to ask a question about it!</string>
+  <string name="askimage_emptystate_content_aicore">To get started, tap the + below to add an image (max 1 image per chat) and type a prompt to ask a question about it!</string>
+  <string name="askaudio_emptystate_title">Audio Scribe</string>
+  <string name="askaudio_emptystate_content">To get started, tap the + below to add an audio clip (limited to 1 clip up to 30 seconds) and type a prompt to transcribe or translate it!</string>
   <string name="gallery_news_notification_title" translatable="false">端语通知</string>
   <string name="baseline" translatable="false">Baseline</string>
   <string name="basic_info" translatable="false">Basic info</string>
@@ -103,7 +112,7 @@
   <string name="category_agents" translatable="false">Agents</string>
   <string name="category_classical_ml" translatable="false">Classical ML</string>
   <string name="category_experimental" translatable="false">Experimental</string>
-  <string name="chat_textinput_placeholder" translatable="false">Type message…</string>
+  <string name="chat_textinput_placeholder">Type message…</string>
   <string name="chat_you" translatable="false">You</string>
   <string name="chat_llm_agent_name" translatable="false">LLM</string>
   <string name="show_thinking" translatable="false">Show thinking</string>
@@ -137,7 +146,7 @@
   <string name="disabled" translatable="false">Disabled</string>
   <string name="dismiss" translatable="false">Dismiss</string>
   <string name="done" translatable="false">Done</string>
-  <string name="download" translatable="false">Download</string>
+  <string name="download">Download</string>
   <string name="downloaded_size" translatable="false">%1$s downloaded</string>
   <string name="drawer_settings_label" translatable="false">Settings</string>
   <string name="drawer_settings_description" translatable="false">Manage application settings</string>
@@ -167,7 +176,7 @@
   <string name="hold_down_to_talk" translatable="false">Hold to talk</string>
   <string name="input_history" translatable="false">Input history</string>
   <string name="instructions" translatable="false">Instructions</string>
-  <string name="introducing" translatable="false">Introducing</string>
+  <string name="introducing">Introducing</string>
   <string name="invalid_response" translatable="false">Invalid response</string>
   <string name="learn_more" translatable="false">Learn more and see model license</string>
   <string name="listening" translatable="false">Listening...</string>
@@ -187,9 +196,9 @@
     <item quantity="other">%d models available</item>
   </plurals>
   <string name="model_list_recommended_models_title" translatable="false">Recommended models</string>
-  <string name="model_manager" translatable="false">Model Manager</string>
-  <string name="model_manager_select_task_title" translatable="false">Select a use case to try</string>
-  <string name="model_not_downloaded_msg" translatable="false">Model not downloaded yet</string>
+  <string name="model_manager">Model Manager</string>
+  <string name="model_manager_select_task_title">Select a use case to try</string>
+  <string name="model_not_downloaded_msg">Model not downloaded yet</string>
   <string name="name" translatable="false">Name</string>
   <string name="no_cutouts_collected" translatable="false">No cutouts collected</string>
   <string name="notification_content_fail" translatable="false">模型 \"%s\" 下载失败</string>
@@ -220,29 +229,29 @@
   <string name="running_benchmark_msg" translatable="false">Running model benchmark...</string>
   <string name="save" translatable="false">Save</string>
   <string name="secret" translatable="false">Secret</string>
-  <string name="select_downloaded_model" translatable="false">Select a downloaded model</string>
-  <string name="select_model" translatable="false">Select a model</string>
+  <string name="select_downloaded_model">Select a downloaded model</string>
+  <string name="select_model">Select a model</string>
   <string name="selected_count" translatable="false">%d selected</string>
   <string name="settings_dialog_tos_title" translatable="false">Terms of service</string>
   <string name="settings_dialog_view_app_terms_of_service" translatable="false">View App Terms of Service</string>
   <string name="settings_dialog_gemma_prohibited_use_policy" translatable="false">Gemma Prohibited Use Policy</string>
   <string name="share" translatable="false">Share</string>
   <string name="slide_up_to_cancel" translatable="false">Slide up to cancel</string>
-  <string name="system_prompt_placeholder" translatable="false">Enter system instructions (e.g., \"You are a versatile assistant. Provide accurate, context-aware responses in a professional tone.\")</string>
-  <string name="system_prompt_updated" translatable="false">System prompt updated</string>
+  <string name="system_prompt_placeholder">Enter system instructions (e.g., \"You are a versatile assistant. Provide accurate, context-aware responses in a professional tone.\")</string>
+  <string name="system_prompt_updated">System prompt updated</string>
   <string name="submit" translatable="false">Submit</string>
   <string name="take_a_picture" translatable="false">Take a picture</string>
   <string name="tap_to_change_color" translatable="false">Tap to change color</string>
   <string name="tap_to_see_value" translatable="false">Tap on graph to see value</string>
   <string name="test" translatable="false">Test</string>
   <string name="text_image_generation_text_field_placeholder" translatable="false">Type prompt…</string>
-  <string name="text_input_placeholder_llm_chat" translatable="false">Type prompt…</string>
+  <string name="text_input_placeholder_llm_chat">Type prompt…</string>
   <string name="tos_dialog_title_app">Welcome to DuanYu</string>
   <string name="tos_dialog_title_gemma" translatable="false">Gemma Terms of Use</string>
   <string name="tos_dialog_content_app">DuanYu runs local AI capabilities on your device for chat, image Q&amp;A, audio transcription, agent skills, notifications, and theme settings.\n\nYou are responsible for the models, files, prompts, skills, and API access that you import, enable, or share. Imported models and third-party skills may have their own licenses, safety limits, and privacy practices.\n\nWhen the local API service is enabled in a future version, keep it limited to trusted devices and networks. Do not expose private models, tokens, files, or personal data to untrusted clients.</string>
   <string name="tos_dialog_accept_and_continue_button_label">Accept &amp; continue</string>
   <string name="tos_dialog_agree_and_continue_button_label" translatable="false">Agree &amp; continue</string>
-  <string name="try_it" translatable="false">Try it</string>
+  <string name="try_it">Try it</string>
   <string name="turn_on_all" translatable="false">Turn on all</string>
   <string name="turn_off_all" translatable="false">Turn off all</string>
   <string name="undo" translatable="false">Undo</string>
@@ -296,8 +305,8 @@
   <string name="mobile_actions_challenge_load_model" translatable="false">Load Model</string>
 
   <!-- Strings for skills -->
-  <string name="aichat_emptystate_title" translatable="false">AI Chat</string>
-  <string name="aichat_emptystate_content" translatable="false">Chat with on-device large language models.</string>
+  <string name="aichat_emptystate_title">AI Chat</string>
+  <string name="aichat_emptystate_content">Chat with on-device large language models.</string>
   <string name="add_script" translatable="false">Add script</string>
   <string name="add_default_script" translatable="false">Add default script</string>
   <string name="add_skill" translatable="false">Add skill</string>
@@ -315,7 +324,12 @@
   <string name="add_skill_dialog_title_from_local_import" translatable="false">Import local skill</string>
   <string name="add_skill_dialog_subtitle_from_local_import" translatable="false">Please first \"adb push\" the whole skill directory to /sdcard/Download</string>
   <string name="add_skill_manual_input_sheet_title" translatable="false">Create a skill</string>
-  <string name="agent_skills" translatable="false">Agent Skills</string>
+  <string name="agent_skills">Agent Skills</string>
+  <string name="agent_skills_intro_body_start">Use specialized, high-order reasoning by loading different skills or </string>
+  <string name="agent_skills_intro_create_link">creating\u00A0your\u00A0own</string>
+  <string name="agent_skills_intro_body_middle">. Explore community contributed skills on </string>
+  <string name="agent_skills_intro_discussions_link">GitHub\u00A0discussions</string>
+  <string name="agent_skills_intro_body_end">.\n\nTry tapping a sample prompt below to see Agent Skills in action!</string>
   <string name="disclaimer_dialog_content" translatable="false">Third-party skills are not authored or endorsed by Google. Google is not responsible for their contents, security, or data handling practices.\n\nPlease exercise caution before providing sensitive information, such as personal identification, tokens, or API keys.\n\nAny use of an Agent Skill is subject to the applicable terms for that Skill.</string>
   <string name="disclaimer_dialog_title" translatable="false">Add third-party skill</string>
   <string name="disclaimer_dialog_agree" translatable="false">Agree</string>
