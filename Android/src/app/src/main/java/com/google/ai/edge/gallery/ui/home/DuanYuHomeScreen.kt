@@ -77,6 +77,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -100,9 +101,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.ai.edge.gallery.BuildConfig
 import com.google.ai.edge.gallery.R
+import com.google.ai.edge.gallery.api.DuanYuApiSettingsViewModel
 import com.google.ai.edge.gallery.data.BuiltInTaskId
 import com.google.ai.edge.gallery.data.ModelDownloadStatusType
 import com.google.ai.edge.gallery.data.Task
@@ -492,18 +495,7 @@ private fun DuanYuSettingsPage(
       )
 
     DuanYuSettingsDestination.API ->
-      DuanYuSettingsDetailPage(
-        title = stringResource(R.string.duanyu_api_service_title),
-        subtitle = stringResource(R.string.duanyu_api_service_subtitle),
-        icon = Icons.Outlined.Api,
-        onBack = { destination = DuanYuSettingsDestination.ROOT },
-      ) {
-        Text(
-          stringResource(R.string.duanyu_api_service_detail),
-          style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
+      DuanYuApiSettingsPage(onBack = { destination = DuanYuSettingsDestination.ROOT })
 
     DuanYuSettingsDestination.LANGUAGE ->
       DuanYuSettingsDetailPage(
@@ -645,7 +637,7 @@ private fun DuanYuSettingsRootPage(
           icon = Icons.Outlined.Api,
           title = stringResource(R.string.duanyu_api_service_title),
           subtitle = stringResource(R.string.duanyu_api_service_subtitle),
-          trailingText = stringResource(R.string.duanyu_status_planned),
+          trailingText = stringResource(R.string.duanyu_status_available),
           modifier = Modifier.weight(1f),
           onClick = onApiClicked,
         )
@@ -691,6 +683,100 @@ private fun DuanYuSettingsRootPage(
           onClick = onAboutClicked,
         )
         Spacer(modifier = Modifier.weight(1f))
+      }
+    }
+  }
+}
+
+@Composable
+private fun DuanYuApiSettingsPage(
+  onBack: () -> Unit,
+  viewModel: DuanYuApiSettingsViewModel = hiltViewModel(),
+) {
+  val state by viewModel.state.collectAsState()
+
+  DuanYuSettingsDetailPage(
+    title = stringResource(R.string.duanyu_api_service_title),
+    subtitle = stringResource(R.string.duanyu_api_service_subtitle),
+    icon = Icons.Outlined.Api,
+    onBack = onBack,
+  ) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+      Text(
+        stringResource(R.string.duanyu_api_service_detail),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      HorizontalDivider()
+      DuanYuSettingsRow(
+        icon = Icons.Outlined.Api,
+        title = stringResource(R.string.duanyu_api_service_switch_title),
+        subtitle =
+          if (state.running) {
+            stringResource(R.string.duanyu_api_service_running)
+          } else {
+            stringResource(R.string.duanyu_api_service_stopped)
+          },
+        trailingText = null,
+        onClick = {
+          if (state.running) {
+            viewModel.stopService()
+          } else {
+            viewModel.startService()
+          }
+        },
+      )
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Column(modifier = Modifier.weight(1f)) {
+          Text(
+            stringResource(R.string.duanyu_api_service_enable),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Medium,
+          )
+          Text(
+            stringResource(R.string.duanyu_api_service_enable_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+        Switch(
+          checked = state.running,
+          onCheckedChange = { checked ->
+            if (checked) {
+              viewModel.startService()
+            } else {
+              viewModel.stopService()
+            }
+          },
+        )
+      }
+      HorizontalDivider()
+      DuanYuSettingsRow(
+        icon = Icons.Rounded.Verified,
+        title = stringResource(R.string.duanyu_api_base_url_title),
+        subtitle = state.baseUrl,
+        trailingText = if (state.running) stringResource(R.string.duanyu_status_running) else null,
+        enabled = false,
+        onClick = {},
+      )
+      DuanYuSettingsRow(
+        icon = Icons.Outlined.Security,
+        title = stringResource(R.string.duanyu_api_listen_scope_title),
+        subtitle = stringResource(R.string.duanyu_api_listen_scope_localhost),
+        enabled = false,
+        onClick = {},
+      )
+      if (state.errorMessage != null) {
+        Text(
+          text = state.errorMessage.orEmpty(),
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.error,
+          modifier = Modifier.padding(horizontal = 18.dp),
+        )
       }
     }
   }
