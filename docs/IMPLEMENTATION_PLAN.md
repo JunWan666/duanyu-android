@@ -289,6 +289,7 @@ POST /v1/skills/{name}/run
 - 017：为已安装模型加入导出入口。
 - 018：为已安装模型补充详情弹窗和文件路径复制。
 - 019：新增端语 core-ai 调用边界和模型目录骨架。
+- 020：将文本聊天推理接入 core-ai 服务，支持 UI 与后续 API 复用同一调用边界。
 
 当前状态：
 
@@ -303,12 +304,13 @@ POST /v1/skills/{name}/run
 - 已安装模型菜单支持导出模型文件，便于测试包之间复用本地模型。
 - 已安装模型菜单支持查看详情，包括来源、运行时、文件名、大小、路径、输入能力和加速器。
 - 新增 core-ai 服务接口和模型目录注册表，后续 API 可复用同一套模型列表。
+- core-ai 已能通过模型目录查找真实运行时模型，并执行非流式或流式文本聊天推理。
 
 下一步优先级：
 
-1. 将 Chat 推理接入 core-ai，避免 API 直接依赖 UI ViewModel。
-2. 将 API 服务从占位卡推进到 M6 的 Foreground Service + 本地 HTTP Server 骨架。
-3. 先实现 `/health` 和 `/v1/models`。
+1. 将 API 服务从占位卡推进到 M6 的 Foreground Service + 本地 HTTP Server 骨架。
+2. 先实现 `/health` 和 `/v1/models`。
+3. 再接入 `/v1/chat/completions`，复用当前 core-ai 聊天推理服务。
 4. 继续完善模型管理的批量管理、多个变体导出和更细的安装状态。
 
 ## 5. 提交节奏

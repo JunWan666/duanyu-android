@@ -32,6 +32,7 @@ import com.google.ai.edge.gallery.coreai.DefaultDuanYuAiService
 import com.google.ai.edge.gallery.coreai.DefaultDuanYuModelRegistry
 import com.google.ai.edge.gallery.coreai.DuanYuAiService
 import com.google.ai.edge.gallery.coreai.DuanYuModelRegistry
+import com.google.ai.edge.gallery.coreai.DuanYuRuntimeModelRegistry
 import com.google.ai.edge.gallery.data.DataStoreRepository
 import com.google.ai.edge.gallery.data.DefaultDataStoreRepository
 import com.google.ai.edge.gallery.data.DefaultDownloadRepository
@@ -192,6 +193,14 @@ internal object AppModule {
   @Provides
   @Singleton
   fun provideDuanYuModelRegistry(registry: DefaultDuanYuModelRegistry): DuanYuModelRegistry {
+    return registry
+  }
+
+  @Provides
+  @Singleton
+  fun provideDuanYuRuntimeModelRegistry(
+    registry: DefaultDuanYuModelRegistry
+  ): DuanYuRuntimeModelRegistry {
     return registry
   }
 

@@ -33,6 +33,7 @@ import com.google.ai.edge.gallery.coreai.DuanYuAiTaskType
 import com.google.ai.edge.gallery.coreai.DuanYuModelDescriptor
 import com.google.ai.edge.gallery.coreai.DuanYuModelInstallState
 import com.google.ai.edge.gallery.coreai.DuanYuModelRegistry
+import com.google.ai.edge.gallery.coreai.DuanYuRuntimeModelRegistry
 import com.google.ai.edge.gallery.customtasks.common.CustomTask
 import com.google.ai.edge.gallery.data.Accelerator
 import com.google.ai.edge.gallery.data.BuiltInTaskId
@@ -225,6 +226,7 @@ constructor(
   private val customTasks: Set<@JvmSuppressWildcards CustomTask>,
   private val systemPromptRepository: SystemPromptRepository,
   private val modelRegistry: DuanYuModelRegistry,
+  private val runtimeModelRegistry: DuanYuRuntimeModelRegistry,
   @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
   private val externalFilesDir = context.getExternalFilesDir(null)
@@ -294,6 +296,7 @@ constructor(
 
   private fun syncModelRegistry(state: ModelManagerUiState = uiState.value) {
     modelRegistry.updateModels(createModelDescriptors(state = state))
+    runtimeModelRegistry.updateRuntimeModels(getRuntimeModels(state = state))
   }
 
   private fun createModelDescriptors(state: ModelManagerUiState): List<DuanYuModelDescriptor> {
@@ -330,6 +333,19 @@ constructor(
         supportsAudio = model.llmSupportAudio,
       )
     }
+  }
+
+  private fun getRuntimeModels(state: ModelManagerUiState): List<Model> {
+    val modelsByName = linkedMapOf<String, Model>()
+    for (task in state.tasks) {
+      if (!isDuanYuTargetTask(task.id)) {
+        continue
+      }
+      for (model in task.models) {
+        modelsByName.putIfAbsent(model.name, model)
+      }
+    }
+    return modelsByName.values.toList()
   }
 
   fun processTasks() {

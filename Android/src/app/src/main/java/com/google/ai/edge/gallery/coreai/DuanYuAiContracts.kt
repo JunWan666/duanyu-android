@@ -7,6 +7,8 @@
 
 package com.google.ai.edge.gallery.coreai
 
+import com.google.ai.edge.gallery.data.Model
+
 enum class DuanYuAiTaskType {
   CHAT,
   IMAGE,
@@ -58,6 +60,12 @@ interface DuanYuModelRegistry {
   fun listModels(): List<DuanYuModelDescriptor>
 
   fun findModel(modelId: String): DuanYuModelDescriptor?
+}
+
+interface DuanYuRuntimeModelRegistry {
+  fun updateRuntimeModels(models: List<Model>)
+
+  fun findRuntimeModel(modelId: String): Model?
 }
 
 interface DuanYuAiService {
