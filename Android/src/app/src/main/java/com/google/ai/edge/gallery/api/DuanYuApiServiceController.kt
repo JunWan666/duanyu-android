@@ -20,9 +20,20 @@ import kotlinx.coroutines.flow.asStateFlow
 @Singleton
 class DuanYuApiServiceController
 @Inject
-constructor(@ApplicationContext private val context: Context) {
-  private val _state = MutableStateFlow(DuanYuApiServiceState())
+constructor(
+  @ApplicationContext private val context: Context,
+  private val tokenStore: DuanYuApiTokenStore,
+) {
+  private val _state = MutableStateFlow(DuanYuApiServiceState(apiToken = tokenStore.getOrCreateToken()))
   val state: StateFlow<DuanYuApiServiceState> = _state.asStateFlow()
+
+  fun apiToken(): String = tokenStore.getOrCreateToken()
+
+  fun regenerateApiToken(): String {
+    val token = tokenStore.regenerateToken()
+    _state.value = _state.value.copy(apiToken = token)
+    return token
+  }
 
   fun start() {
     val intent =
@@ -34,7 +45,7 @@ constructor(@ApplicationContext private val context: Context) {
 
   fun stop() {
     context.stopService(Intent(context, DuanYuApiForegroundService::class.java))
-    _state.value = DuanYuApiServiceState()
+    _state.value = DuanYuApiServiceState(apiToken = apiToken())
   }
 
   internal fun markStarted(host: String, port: Int) {
@@ -43,15 +54,16 @@ constructor(@ApplicationContext private val context: Context) {
         running = true,
         host = host,
         port = port,
+        apiToken = apiToken(),
         startedAtMillis = System.currentTimeMillis(),
       )
   }
 
   internal fun markStopped() {
-    _state.value = DuanYuApiServiceState()
+    _state.value = DuanYuApiServiceState(apiToken = apiToken())
   }
 
   internal fun markError(message: String) {
-    _state.value = _state.value.copy(running = false, errorMessage = message)
+    _state.value = _state.value.copy(running = false, apiToken = apiToken(), errorMessage = message)
   }
 }

@@ -19,11 +19,14 @@ package com.google.ai.edge.gallery.ui.home
 import android.Manifest
 import android.app.Activity
 import android.app.UiModeManager
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,8 +62,10 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -69,6 +74,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.NavigationBar
@@ -693,7 +699,11 @@ private fun DuanYuApiSettingsPage(
   onBack: () -> Unit,
   viewModel: DuanYuApiSettingsViewModel = hiltViewModel(),
 ) {
+  val context = LocalContext.current
   val state by viewModel.state.collectAsState()
+  val tokenCopiedMessage = stringResource(R.string.duanyu_api_token_copied)
+  val baseUrlCopiedMessage = stringResource(R.string.duanyu_api_base_url_copied)
+  val tokenRefreshedMessage = stringResource(R.string.duanyu_api_token_refreshed)
 
   DuanYuSettingsDetailPage(
     title = stringResource(R.string.duanyu_api_service_title),
@@ -759,9 +769,38 @@ private fun DuanYuApiSettingsPage(
         icon = Icons.Rounded.Verified,
         title = stringResource(R.string.duanyu_api_base_url_title),
         subtitle = state.baseUrl,
-        trailingText = if (state.running) stringResource(R.string.duanyu_status_running) else null,
-        enabled = false,
-        onClick = {},
+        trailingIcon = Icons.Rounded.ContentCopy,
+        onClick = {
+          copyTextToClipboard(
+            context = context,
+            label = "duanyu_api_base_url",
+            text = state.baseUrl,
+            message = baseUrlCopiedMessage,
+          )
+        },
+      )
+      DuanYuSettingsRow(
+        icon = Icons.Outlined.Security,
+        title = stringResource(R.string.duanyu_api_token_title),
+        subtitle = state.apiToken.maskApiToken(),
+        trailingIcon = Icons.Rounded.ContentCopy,
+        onClick = {
+          copyTextToClipboard(
+            context = context,
+            label = "duanyu_api_token",
+            text = state.apiToken,
+            message = tokenCopiedMessage,
+          )
+        },
+      )
+      DuanYuSettingsRow(
+        icon = Icons.Rounded.Refresh,
+        title = stringResource(R.string.duanyu_api_regenerate_token_title),
+        subtitle = stringResource(R.string.duanyu_api_regenerate_token_subtitle),
+        onClick = {
+          viewModel.regenerateApiToken()
+          Toast.makeText(context, tokenRefreshedMessage, Toast.LENGTH_SHORT).show()
+        },
       )
       DuanYuSettingsRow(
         icon = Icons.Outlined.Security,
@@ -953,11 +992,15 @@ private fun DuanYuSettingsRow(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     } else if (trailingIcon != null) {
-      Icon(
-        imageVector = trailingIcon,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-      )
+      IconButton(onClick = onClick, enabled = enabled) {
+        Icon(
+          imageVector = trailingIcon,
+          contentDescription = null,
+          tint =
+            if (enabled) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
     } else if (enabled) {
       Icon(
         imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
@@ -984,6 +1027,22 @@ private fun DuanYuStatPill(label: String, value: String, modifier: Modifier = Mo
       Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     }
   }
+}
+
+private fun String.maskApiToken(): String {
+  if (isBlank()) {
+    return ""
+  }
+  if (length <= 12) {
+    return this
+  }
+  return "${take(8)}...${takeLast(4)}"
+}
+
+private fun copyTextToClipboard(context: Context, label: String, text: String, message: String) {
+  val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+  clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+  Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }
 
 @Composable

@@ -14,6 +14,7 @@ data class DuanYuApiServiceState(
   val running: Boolean = false,
   val host: String = DUANYU_API_DEFAULT_HOST,
   val port: Int = DUANYU_API_DEFAULT_PORT,
+  val apiToken: String = "",
   val startedAtMillis: Long? = null,
   val errorMessage: String? = null,
 ) {

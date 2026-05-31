@@ -76,7 +76,7 @@
   <string name="duanyu_export_model_failed">Unable to open export options.</string>
   <string name="duanyu_api_service_title">API Service</string>
   <string name="duanyu_api_service_subtitle">OpenAI-compatible local interface</string>
-  <string name="duanyu_api_service_detail">The local API service is off by default and currently listens only on this device. This skeleton includes health and model-list routes; chat completions, audio transcription, and skills will be added in later milestones.</string>
+  <string name="duanyu_api_service_detail">The local API service is off by default and currently listens only on this device. Use the Base URL with an OpenAI-compatible client and pass the token as Authorization: Bearer.</string>
   <string name="duanyu_status_planned">Planned</string>
   <string name="duanyu_status_available">Available</string>
   <string name="duanyu_status_running">Running</string>
@@ -86,6 +86,12 @@
   <string name="duanyu_api_service_enable">Enable local API</string>
   <string name="duanyu_api_service_enable_subtitle">Starts a foreground service while enabled</string>
   <string name="duanyu_api_base_url_title">Base URL</string>
+  <string name="duanyu_api_base_url_copied">Base URL copied</string>
+  <string name="duanyu_api_token_title">Access token</string>
+  <string name="duanyu_api_token_copied">API token copied</string>
+  <string name="duanyu_api_token_refreshed">API token regenerated</string>
+  <string name="duanyu_api_regenerate_token_title">Regenerate token</string>
+  <string name="duanyu_api_regenerate_token_subtitle">Old clients must update their Bearer token</string>
   <string name="duanyu_api_listen_scope_title">Listen scope</string>
   <string name="duanyu_api_listen_scope_localhost">Localhost only by default</string>
   <string name="duanyu_api_notification_channel_name">DuanYu API Service</string>

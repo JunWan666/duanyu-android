@@ -64,7 +64,7 @@
   <string name="duanyu_export_model_failed">无法打开导出选项。</string>
   <string name="duanyu_api_service_title">API 服务</string>
   <string name="duanyu_api_service_subtitle">OpenAI 兼容本地接口</string>
-  <string name="duanyu_api_service_detail">本地 API 服务默认关闭，目前只监听本机地址。本阶段已加入健康检查和模型列表路由，聊天补全、音频转写和技能接口会在后续里程碑继续接入。</string>
+  <string name="duanyu_api_service_detail">本地 API 服务默认关闭，目前只监听本机地址。外部客户端可按 OpenAI 兼容格式接入基础地址，并在 Authorization 中传入 Bearer 令牌。</string>
   <string name="duanyu_status_planned">规划中</string>
   <string name="duanyu_status_available">可使用</string>
   <string name="duanyu_status_running">运行中</string>
@@ -74,6 +74,12 @@
   <string name="duanyu_api_service_enable">启用本地 API</string>
   <string name="duanyu_api_service_enable_subtitle">启用期间会保持前台服务</string>
   <string name="duanyu_api_base_url_title">基础地址</string>
+  <string name="duanyu_api_base_url_copied">基础地址已复制</string>
+  <string name="duanyu_api_token_title">访问令牌</string>
+  <string name="duanyu_api_token_copied">API 令牌已复制</string>
+  <string name="duanyu_api_token_refreshed">API 令牌已重新生成</string>
+  <string name="duanyu_api_regenerate_token_title">重新生成令牌</string>
+  <string name="duanyu_api_regenerate_token_subtitle">旧客户端需要更新 Bearer 令牌</string>
   <string name="duanyu_api_listen_scope_title">监听范围</string>
   <string name="duanyu_api_listen_scope_localhost">默认仅本机访问</string>
   <string name="duanyu_api_notification_channel_name">端语 API 服务</string>

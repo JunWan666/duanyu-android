@@ -67,6 +67,7 @@ class DuanYuApiForegroundService : Service() {
         host = DUANYU_API_DEFAULT_HOST,
         port = DUANYU_API_DEFAULT_PORT,
         aiService = aiService,
+        apiTokenProvider = controller::apiToken,
         scope = serviceScope,
       )
     httpServer = server

@@ -32,6 +32,7 @@ internal class DuanYuLocalHttpServer(
   private val host: String,
   private val port: Int,
   private val aiService: DuanYuAiService,
+  private val apiTokenProvider: () -> String,
   private val scope: CoroutineScope,
 ) {
   private val gson = Gson()
@@ -94,6 +95,22 @@ internal class DuanYuLocalHttpServer(
           }
         }
         val body = inputStream.readBody(headers.contentLength())
+
+        if (route != "GET /health" && !headers.hasValidBearerToken(apiTokenProvider())) {
+          client.getOutputStream()
+            .writeJsonResponse(
+              HttpResponse(
+                status = "401 Unauthorized",
+                headers = listOf("WWW-Authenticate: Bearer"),
+                body =
+                  errorJson(
+                    message = "Missing or invalid API token.",
+                    type = "authentication_error",
+                  ),
+              )
+            )
+          return@use
+        }
 
         when (route) {
           "GET /health" ->
@@ -265,8 +282,16 @@ internal class DuanYuLocalHttpServer(
     return """{"error":{"message":"${message.jsonEscaped()}","type":"${type.jsonEscaped()}"}}"""
   }
 
-  private fun Map<String, String>.contentLength(): Int {
-    return this["content-length"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+  private fun Map<String, String>.contentLength(): Int =
+    this["content-length"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+
+  private fun Map<String, String>.hasValidBearerToken(expectedToken: String): Boolean {
+    val authHeader = this["authorization"].orEmpty()
+    if (!authHeader.startsWith(BEARER_PREFIX, ignoreCase = true)) {
+      return false
+    }
+    val token = authHeader.substring(BEARER_PREFIX.length).trim()
+    return expectedToken.isNotBlank() && token == expectedToken
   }
 
   private fun InputStream.readHttpLine(): String? {
@@ -329,6 +354,7 @@ internal class DuanYuLocalHttpServer(
     val header =
       buildString {
         append("HTTP/1.1 ").append(response.status).append("\r\n")
+        response.headers.forEach { append(it).append("\r\n") }
         append("Content-Type: application/json; charset=utf-8\r\n")
         append("Content-Length: ").append(bodyBytes.size).append("\r\n")
         append("Connection: close\r\n")
@@ -373,7 +399,11 @@ internal class DuanYuLocalHttpServer(
     flush()
   }
 
-  private data class HttpResponse(val status: String, val body: String)
+  private data class HttpResponse(
+    val status: String,
+    val body: String,
+    val headers: List<String> = emptyList(),
+  )
 
   private data class ParsedChatCompletionRequest(
     val responseId: String,
@@ -394,5 +424,6 @@ internal class DuanYuLocalHttpServer(
 
   private companion object {
     const val BACKLOG = 8
+    const val BEARER_PREFIX = "Bearer "
   }
 }

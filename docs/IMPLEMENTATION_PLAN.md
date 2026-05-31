@@ -292,6 +292,7 @@ POST /v1/skills/{name}/run
 - 020：将文本聊天推理接入 core-ai 服务，支持 UI 与后续 API 复用同一调用边界。
 - 021：新增本地 API 前台服务骨架，支持设置页启动停止、前台通知、健康检查和模型列表路由。
 - 022：实现 OpenAI 兼容聊天补全 API，支持非流式 JSON 响应和基础 SSE 流式响应。
+- 023：为本地 API 增加 Bearer Token 管理和请求鉴权，设置页支持复制基础地址与访问令牌。
 
 当前状态：
 
@@ -309,12 +310,14 @@ POST /v1/skills/{name}/run
 - core-ai 已能通过模型目录查找真实运行时模型，并执行非流式或流式文本聊天推理。
 - API 服务页已可启动和停止本地前台服务，默认监听 `127.0.0.1:8765`，当前骨架提供 `/health` 和 `/v1/models`。
 - `/v1/chat/completions` 已接入 core-ai 文本聊天服务，支持 OpenAI 风格的 `model`、`messages` 和 `stream` 字段。
+- `/v1/models` 和 `/v1/chat/completions` 已要求 `Authorization: Bearer <token>`，`/health` 保留免鉴权探活。
+- API 服务页已展示可复制的基础地址和访问令牌，并支持重新生成令牌。
 
 下一步优先级：
 
-1. 为 API 服务补充 Bearer Token 管理和请求鉴权。
-2. 完善 OpenAI 兼容响应结构、错误码、模型元数据和调用示例。
-3. 在设置页展示 Token、复制 Base URL、复制 curl 示例。
+1. 完善 OpenAI 兼容响应结构、错误码、模型元数据和调用示例。
+2. 在设置页补充 curl 示例和更明确的安全说明。
+3. 开始接入图像问答、音频转写和技能调用 API。
 4. 继续完善模型管理的批量管理、多个变体导出和更细的安装状态。
 
 ## 5. 提交节奏

@@ -25,4 +25,8 @@ constructor(private val controller: DuanYuApiServiceController) : ViewModel() {
   fun stopService() {
     controller.stop()
   }
+
+  fun regenerateApiToken() {
+    controller.regenerateApiToken()
+  }
 }
