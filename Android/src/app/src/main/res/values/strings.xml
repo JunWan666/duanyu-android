@@ -92,6 +92,9 @@
   <string name="duanyu_api_token_refreshed">API token regenerated</string>
   <string name="duanyu_api_regenerate_token_title">Regenerate token</string>
   <string name="duanyu_api_regenerate_token_subtitle">Old clients must update their Bearer token</string>
+  <string name="duanyu_api_curl_title">Copy curl example</string>
+  <string name="duanyu_api_curl_subtitle">Chat completions request template</string>
+  <string name="duanyu_api_curl_copied">curl example copied</string>
   <string name="duanyu_api_listen_scope_title">Listen scope</string>
   <string name="duanyu_api_listen_scope_localhost">Localhost only by default</string>
   <string name="duanyu_api_notification_channel_name">DuanYu API Service</string>

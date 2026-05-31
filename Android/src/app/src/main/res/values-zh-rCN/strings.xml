@@ -80,6 +80,9 @@
   <string name="duanyu_api_token_refreshed">API 令牌已重新生成</string>
   <string name="duanyu_api_regenerate_token_title">重新生成令牌</string>
   <string name="duanyu_api_regenerate_token_subtitle">旧客户端需要更新 Bearer 令牌</string>
+  <string name="duanyu_api_curl_title">复制 curl 示例</string>
+  <string name="duanyu_api_curl_subtitle">聊天补全请求模板</string>
+  <string name="duanyu_api_curl_copied">curl 示例已复制</string>
   <string name="duanyu_api_listen_scope_title">监听范围</string>
   <string name="duanyu_api_listen_scope_localhost">默认仅本机访问</string>
   <string name="duanyu_api_notification_channel_name">端语 API 服务</string>

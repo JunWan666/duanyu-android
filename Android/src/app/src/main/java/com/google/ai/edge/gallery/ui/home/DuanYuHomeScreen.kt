@@ -61,6 +61,7 @@ import androidx.compose.material.icons.outlined.Mms
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Notifications
@@ -703,7 +704,11 @@ private fun DuanYuApiSettingsPage(
   val state by viewModel.state.collectAsState()
   val tokenCopiedMessage = stringResource(R.string.duanyu_api_token_copied)
   val baseUrlCopiedMessage = stringResource(R.string.duanyu_api_base_url_copied)
+  val curlCopiedMessage = stringResource(R.string.duanyu_api_curl_copied)
   val tokenRefreshedMessage = stringResource(R.string.duanyu_api_token_refreshed)
+  val curlExample = remember(state.baseUrl, state.apiToken) {
+    buildDuanYuApiCurlExample(baseUrl = state.baseUrl, token = state.apiToken)
+  }
 
   DuanYuSettingsDetailPage(
     title = stringResource(R.string.duanyu_api_service_title),
@@ -800,6 +805,20 @@ private fun DuanYuApiSettingsPage(
         onClick = {
           viewModel.regenerateApiToken()
           Toast.makeText(context, tokenRefreshedMessage, Toast.LENGTH_SHORT).show()
+        },
+      )
+      DuanYuSettingsRow(
+        icon = Icons.Outlined.Terminal,
+        title = stringResource(R.string.duanyu_api_curl_title),
+        subtitle = stringResource(R.string.duanyu_api_curl_subtitle),
+        trailingIcon = Icons.Rounded.ContentCopy,
+        onClick = {
+          copyTextToClipboard(
+            context = context,
+            label = "duanyu_api_curl",
+            text = curlExample,
+            message = curlCopiedMessage,
+          )
         },
       )
       DuanYuSettingsRow(
@@ -1043,6 +1062,16 @@ private fun copyTextToClipboard(context: Context, label: String, text: String, m
   val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
   clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
   Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+private fun buildDuanYuApiCurlExample(baseUrl: String, token: String): String {
+  return """
+    curl ${baseUrl.trimEnd('/')}/v1/chat/completions \
+      -H "Authorization: Bearer $token" \
+      -H "Content-Type: application/json" \
+      -d '{"model":"<model-id>","messages":[{"role":"user","content":"Hello from DuanYu."}],"stream":false}'
+  """
+    .trimIndent()
 }
 
 @Composable

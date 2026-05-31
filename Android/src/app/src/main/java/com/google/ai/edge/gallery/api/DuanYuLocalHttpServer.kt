@@ -7,10 +7,12 @@
 
 package com.google.ai.edge.gallery.api
 
+import com.google.ai.edge.gallery.coreai.DuanYuAiTaskType
 import com.google.ai.edge.gallery.coreai.DuanYuChatCompletionChunk
 import com.google.ai.edge.gallery.coreai.DuanYuChatCompletionRequest
 import com.google.ai.edge.gallery.coreai.DuanYuChatMessage
 import com.google.ai.edge.gallery.coreai.DuanYuAiService
+import com.google.ai.edge.gallery.coreai.DuanYuModelInstallState
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import java.io.ByteArrayOutputStream
@@ -106,6 +108,7 @@ internal class DuanYuLocalHttpServer(
                   errorJson(
                     message = "Missing or invalid API token.",
                     type = "authentication_error",
+                    code = "invalid_api_key",
                   ),
               )
             )
@@ -142,7 +145,8 @@ internal class DuanYuLocalHttpServer(
                   body =
                     errorJson(
                       message = "Endpoint is not implemented yet.",
-                      type = "not_found",
+                      type = "invalid_request_error",
+                      code = "endpoint_not_found",
                     ),
                 )
               )
@@ -159,11 +163,21 @@ internal class DuanYuLocalHttpServer(
         outputStream.writeJsonResponse(
           HttpResponse(
             status = "400 Bad Request",
-            body = errorJson(e.message ?: "Invalid request.", "invalid_request_error"),
+            body =
+              errorJson(
+                message = e.message ?: "Invalid request.",
+                type = "invalid_request_error",
+              ),
           )
         )
         return
       }
+
+    val modelError = validateChatModel(parsedRequest.modelId)
+    if (modelError != null) {
+      outputStream.writeJsonResponse(modelError)
+      return
+    }
 
     try {
       if (parsedRequest.request.stream) {
@@ -179,6 +193,9 @@ internal class DuanYuLocalHttpServer(
       } else {
         val content = StringBuilder()
         aiService.chatCompletion(parsedRequest.request) { chunk -> content.append(chunk.content) }
+        val promptTokens =
+          parsedRequest.request.messages.sumOf { message -> estimateTokens(message.content) }
+        val completionTokens = estimateTokens(content.toString())
         outputStream.writeJsonResponse(
           HttpResponse(
             status = "200 OK",
@@ -187,6 +204,8 @@ internal class DuanYuLocalHttpServer(
                 id = parsedRequest.responseId,
                 model = parsedRequest.modelId,
                 content = content.toString(),
+                promptTokens = promptTokens,
+                completionTokens = completionTokens,
               ),
           )
         )
@@ -195,7 +214,11 @@ internal class DuanYuLocalHttpServer(
       outputStream.writeJsonResponse(
         HttpResponse(
           status = "500 Internal Server Error",
-          body = errorJson(e.message ?: "Failed to run chat completion.", "server_error"),
+          body =
+            errorJson(
+              message = e.message ?: "Failed to run chat completion.",
+              type = "server_error",
+            ),
         )
       )
     }
@@ -245,21 +268,75 @@ internal class DuanYuLocalHttpServer(
     )
   }
 
+  private fun validateChatModel(modelId: String): HttpResponse? {
+    val model = aiService.listModels().firstOrNull { it.id == modelId }
+    if (model == null) {
+      return HttpResponse(
+        status = "404 Not Found",
+        body =
+          errorJson(
+            message = "Model '$modelId' was not found.",
+            type = "invalid_request_error",
+            param = "model",
+            code = "model_not_found",
+          ),
+      )
+    }
+    if (DuanYuAiTaskType.CHAT !in model.taskTypes) {
+      return HttpResponse(
+        status = "400 Bad Request",
+        body =
+          errorJson(
+            message = "Model '$modelId' does not support chat completions.",
+            type = "invalid_request_error",
+            param = "model",
+            code = "model_not_supported",
+          ),
+      )
+    }
+    if (model.installState != DuanYuModelInstallState.INSTALLED) {
+      return HttpResponse(
+        status = "400 Bad Request",
+        body =
+          errorJson(
+            message = "Model '$modelId' is not installed.",
+            type = "invalid_request_error",
+            param = "model",
+            code = "model_not_installed",
+          ),
+      )
+    }
+    return null
+  }
+
   private fun modelsJson(): String {
     val models =
       aiService.listModels().joinToString(separator = ",") { model ->
         val id = model.id.jsonEscaped()
         val displayName = model.displayName.jsonEscaped()
         val ownedBy = "duanyu"
-        """{"id":"$id","object":"model","owned_by":"$ownedBy","display_name":"$displayName"}"""
+        val installState = model.installState.name.lowercase(Locale.US).jsonEscaped()
+        val runtimeType = model.runtimeType.jsonEscaped()
+        val taskTypes =
+          model.taskTypes.joinToString(separator = ",") {
+            """"${it.name.lowercase(Locale.US).jsonEscaped()}""""
+          }
+        """{"id":"$id","object":"model","created":0,"owned_by":"$ownedBy","display_name":"$displayName","metadata":{"install_state":"$installState","runtime_type":"$runtimeType","imported":${model.imported},"task_types":[$taskTypes],"supports_image":${model.supportsImage},"supports_audio":${model.supportsAudio}}}"""
       }
     return """{"object":"list","data":[$models]}"""
   }
 
-  private fun chatCompletionJson(id: String, model: String, content: String): String {
+  private fun chatCompletionJson(
+    id: String,
+    model: String,
+    content: String,
+    promptTokens: Int,
+    completionTokens: Int,
+  ): String {
     val now = System.currentTimeMillis() / 1000
+    val totalTokens = promptTokens + completionTokens
     return """
-      {"id":"${id.jsonEscaped()}","object":"chat.completion","created":$now,"model":"${model.jsonEscaped()}","choices":[{"index":0,"message":{"role":"assistant","content":"${content.jsonEscaped()}"},"finish_reason":"stop"}]}
+      {"id":"${id.jsonEscaped()}","object":"chat.completion","created":$now,"model":"${model.jsonEscaped()}","choices":[{"index":0,"message":{"role":"assistant","content":"${content.jsonEscaped()}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":$promptTokens,"completion_tokens":$completionTokens,"total_tokens":$totalTokens}}
     """
       .trimIndent()
   }
@@ -278,8 +355,22 @@ internal class DuanYuLocalHttpServer(
       .trimIndent()
   }
 
-  private fun errorJson(message: String, type: String): String {
-    return """{"error":{"message":"${message.jsonEscaped()}","type":"${type.jsonEscaped()}"}}"""
+  private fun errorJson(
+    message: String,
+    type: String,
+    param: String? = null,
+    code: String? = null,
+  ): String {
+    val paramJson = param?.let { """"${it.jsonEscaped()}"""" } ?: "null"
+    val codeJson = code?.let { """"${it.jsonEscaped()}"""" } ?: "null"
+    return """{"error":{"message":"${message.jsonEscaped()}","type":"${type.jsonEscaped()}","param":$paramJson,"code":$codeJson}}"""
+  }
+
+  private fun estimateTokens(text: String): Int {
+    if (text.isBlank()) {
+      return 0
+    }
+    return (text.length + TOKEN_ESTIMATE_CHARS_PER_TOKEN - 1) / TOKEN_ESTIMATE_CHARS_PER_TOKEN
   }
 
   private fun Map<String, String>.contentLength(): Int =
@@ -425,5 +516,6 @@ internal class DuanYuLocalHttpServer(
   private companion object {
     const val BACKLOG = 8
     const val BEARER_PREFIX = "Bearer "
+    const val TOKEN_ESTIMATE_CHARS_PER_TOKEN = 4
   }
 }
