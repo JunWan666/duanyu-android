@@ -7,9 +7,14 @@
 
 package com.google.ai.edge.gallery.api
 
+import com.google.ai.edge.gallery.coreai.DuanYuChatCompletionChunk
+import com.google.ai.edge.gallery.coreai.DuanYuChatCompletionRequest
+import com.google.ai.edge.gallery.coreai.DuanYuChatMessage
 import com.google.ai.edge.gallery.coreai.DuanYuAiService
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -29,6 +34,7 @@ internal class DuanYuLocalHttpServer(
   private val aiService: DuanYuAiService,
   private val scope: CoroutineScope,
 ) {
+  private val gson = Gson()
   private val running = AtomicBoolean(false)
   private var serverSocket: ServerSocket? = null
   private var serverJob: Job? = null
@@ -72,35 +78,154 @@ internal class DuanYuLocalHttpServer(
   private suspend fun handleClient(socket: Socket) {
     withContext(Dispatchers.IO) {
       socket.use { client ->
-        val reader = BufferedReader(InputStreamReader(client.getInputStream()))
-        val requestLine = reader.readLine().orEmpty()
+        val inputStream = client.getInputStream()
+        val requestLine = inputStream.readHttpLine().orEmpty()
         val route = requestLine.toRoute()
-        while (!reader.readLine().isNullOrEmpty()) {
-          // Drain headers for this first local skeleton.
-        }
-
-        val response =
-          when (route) {
-            "GET /health" ->
-              HttpResponse(
-                status = "200 OK",
-                body = """{"status":"ok","service":"duanyu-api"}""",
-              )
-            "GET /v1/models" ->
-              HttpResponse(
-                status = "200 OK",
-                body = modelsJson(),
-              )
-            else ->
-              HttpResponse(
-                status = "404 Not Found",
-                body =
-                  """{"error":{"message":"Endpoint is not implemented yet.","type":"not_found"}}""",
-              )
+        val headers = mutableMapOf<String, String>()
+        while (true) {
+          val line = inputStream.readHttpLine()
+          if (line.isNullOrEmpty()) {
+            break
           }
-        client.getOutputStream().writeResponse(response)
+          val separatorIndex = line.indexOf(':')
+          if (separatorIndex > 0) {
+            headers[line.substring(0, separatorIndex).trim().lowercase(Locale.US)] =
+              line.substring(separatorIndex + 1).trim()
+          }
+        }
+        val body = inputStream.readBody(headers.contentLength())
+
+        when (route) {
+          "GET /health" ->
+            client.getOutputStream()
+              .writeJsonResponse(
+                HttpResponse(
+                  status = "200 OK",
+                  body = """{"status":"ok","service":"duanyu-api"}""",
+                )
+              )
+          "GET /v1/models" ->
+            client.getOutputStream()
+              .writeJsonResponse(
+                HttpResponse(
+                  status = "200 OK",
+                  body = modelsJson(),
+                )
+              )
+          "POST /v1/chat/completions" ->
+            handleChatCompletion(
+              body = body,
+              outputStream = client.getOutputStream(),
+            )
+          else ->
+            client.getOutputStream()
+              .writeJsonResponse(
+                HttpResponse(
+                  status = "404 Not Found",
+                  body =
+                    errorJson(
+                      message = "Endpoint is not implemented yet.",
+                      type = "not_found",
+                    ),
+                )
+              )
+        }
       }
     }
+  }
+
+  private suspend fun handleChatCompletion(body: String, outputStream: OutputStream) {
+    val parsedRequest =
+      try {
+        parseChatCompletionRequest(body)
+      } catch (e: IllegalArgumentException) {
+        outputStream.writeJsonResponse(
+          HttpResponse(
+            status = "400 Bad Request",
+            body = errorJson(e.message ?: "Invalid request.", "invalid_request_error"),
+          )
+        )
+        return
+      }
+
+    try {
+      if (parsedRequest.request.stream) {
+        outputStream.writeSseHeaders()
+        aiService.chatCompletion(parsedRequest.request) { chunk ->
+          outputStream.writeSseChunk(
+            id = parsedRequest.responseId,
+            model = parsedRequest.modelId,
+            chunk = chunk,
+          )
+        }
+        outputStream.writeSseDone()
+      } else {
+        val content = StringBuilder()
+        aiService.chatCompletion(parsedRequest.request) { chunk -> content.append(chunk.content) }
+        outputStream.writeJsonResponse(
+          HttpResponse(
+            status = "200 OK",
+            body =
+              chatCompletionJson(
+                id = parsedRequest.responseId,
+                model = parsedRequest.modelId,
+                content = content.toString(),
+              ),
+          )
+        )
+      }
+    } catch (e: Exception) {
+      outputStream.writeJsonResponse(
+        HttpResponse(
+          status = "500 Internal Server Error",
+          body = errorJson(e.message ?: "Failed to run chat completion.", "server_error"),
+        )
+      )
+    }
+  }
+
+  private fun parseChatCompletionRequest(body: String): ParsedChatCompletionRequest {
+    if (body.isBlank()) {
+      throw IllegalArgumentException("Request body must not be empty.")
+    }
+    val payload =
+      try {
+        gson.fromJson(body, OpenAiChatCompletionRequest::class.java)
+      } catch (e: JsonSyntaxException) {
+        throw IllegalArgumentException("Request body is not valid JSON.")
+      } ?: throw IllegalArgumentException("Request body is not valid JSON.")
+
+    val modelId = payload.model?.trim().orEmpty()
+    if (modelId.isEmpty()) {
+      throw IllegalArgumentException("Field 'model' is required.")
+    }
+    val messages =
+      payload.messages.orEmpty().mapIndexed { index, message ->
+        val role = message.role?.trim().orEmpty()
+        val content = message.content?.trim().orEmpty()
+        if (role.isEmpty()) {
+          throw IllegalArgumentException("Message $index is missing role.")
+        }
+        if (content.isEmpty()) {
+          throw IllegalArgumentException("Message $index is missing content.")
+        }
+        DuanYuChatMessage(role = role, content = content)
+      }
+    if (messages.isEmpty()) {
+      throw IllegalArgumentException("Field 'messages' must contain at least one message.")
+    }
+
+    val responseId = "chatcmpl-${System.currentTimeMillis()}"
+    return ParsedChatCompletionRequest(
+      responseId = responseId,
+      modelId = modelId,
+      request =
+        DuanYuChatCompletionRequest(
+          modelId = modelId,
+          messages = messages,
+          stream = payload.stream == true,
+        ),
+    )
   }
 
   private fun modelsJson(): String {
@@ -112,6 +237,66 @@ internal class DuanYuLocalHttpServer(
         """{"id":"$id","object":"model","owned_by":"$ownedBy","display_name":"$displayName"}"""
       }
     return """{"object":"list","data":[$models]}"""
+  }
+
+  private fun chatCompletionJson(id: String, model: String, content: String): String {
+    val now = System.currentTimeMillis() / 1000
+    return """
+      {"id":"${id.jsonEscaped()}","object":"chat.completion","created":$now,"model":"${model.jsonEscaped()}","choices":[{"index":0,"message":{"role":"assistant","content":"${content.jsonEscaped()}"},"finish_reason":"stop"}]}
+    """
+      .trimIndent()
+  }
+
+  private fun chatCompletionChunkJson(
+    id: String,
+    model: String,
+    content: String,
+    done: Boolean,
+  ): String {
+    val now = System.currentTimeMillis() / 1000
+    val finishReason = if (done) """"stop"""" else "null"
+    return """
+      {"id":"${id.jsonEscaped()}","object":"chat.completion.chunk","created":$now,"model":"${model.jsonEscaped()}","choices":[{"index":0,"delta":{"content":"${content.jsonEscaped()}"},"finish_reason":$finishReason}]}
+    """
+      .trimIndent()
+  }
+
+  private fun errorJson(message: String, type: String): String {
+    return """{"error":{"message":"${message.jsonEscaped()}","type":"${type.jsonEscaped()}"}}"""
+  }
+
+  private fun Map<String, String>.contentLength(): Int {
+    return this["content-length"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+  }
+
+  private fun InputStream.readHttpLine(): String? {
+    val lineBytes = ByteArrayOutputStream()
+    while (true) {
+      val byte = read()
+      if (byte == -1) {
+        return if (lineBytes.size() == 0) null else lineBytes.toString(StandardCharsets.UTF_8.name())
+      }
+      if (byte == '\n'.code) {
+        return lineBytes.toString(StandardCharsets.UTF_8.name()).trimEnd('\r')
+      }
+      lineBytes.write(byte)
+    }
+  }
+
+  private fun InputStream.readBody(contentLength: Int): String {
+    if (contentLength <= 0) {
+      return ""
+    }
+    val buffer = ByteArray(contentLength)
+    var offset = 0
+    while (offset < contentLength) {
+      val read = read(buffer, offset, contentLength - offset)
+      if (read < 0) {
+        break
+      }
+      offset += read
+    }
+    return String(buffer, 0, offset, StandardCharsets.UTF_8)
   }
 
   private fun String.toRoute(): String {
@@ -139,7 +324,7 @@ internal class DuanYuLocalHttpServer(
     }
   }
 
-  private fun OutputStream.writeResponse(response: HttpResponse) {
+  private fun OutputStream.writeJsonResponse(response: HttpResponse) {
     val bodyBytes = response.body.toByteArray(StandardCharsets.UTF_8)
     val header =
       buildString {
@@ -154,7 +339,58 @@ internal class DuanYuLocalHttpServer(
     flush()
   }
 
+  private fun OutputStream.writeSseHeaders() {
+    val header =
+      buildString {
+        append("HTTP/1.1 200 OK\r\n")
+        append("Content-Type: text/event-stream; charset=utf-8\r\n")
+        append("Cache-Control: no-cache\r\n")
+        append("Connection: close\r\n")
+        append("\r\n")
+      }
+    write(header.toByteArray(StandardCharsets.UTF_8))
+    flush()
+  }
+
+  private fun OutputStream.writeSseChunk(
+    id: String,
+    model: String,
+    chunk: DuanYuChatCompletionChunk,
+  ) {
+    val json =
+      chatCompletionChunkJson(
+        id = id,
+        model = model,
+        content = chunk.content,
+        done = chunk.done,
+      )
+    write("data: $json\n\n".toByteArray(StandardCharsets.UTF_8))
+    flush()
+  }
+
+  private fun OutputStream.writeSseDone() {
+    write("data: [DONE]\n\n".toByteArray(StandardCharsets.UTF_8))
+    flush()
+  }
+
   private data class HttpResponse(val status: String, val body: String)
+
+  private data class ParsedChatCompletionRequest(
+    val responseId: String,
+    val modelId: String,
+    val request: DuanYuChatCompletionRequest,
+  )
+
+  private data class OpenAiChatCompletionRequest(
+    val model: String?,
+    val messages: List<OpenAiChatMessage>?,
+    val stream: Boolean?,
+  )
+
+  private data class OpenAiChatMessage(
+    val role: String?,
+    val content: String?,
+  )
 
   private companion object {
     const val BACKLOG = 8
